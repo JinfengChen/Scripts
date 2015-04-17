@@ -1,0 +1,1 @@
+/share/raid12/chenjinfeng/tools/bin/soap -a /share/raid12/chenjinfeng/FFgenome/assmbly/simulateSeq/chr04_500_30_75_reads1.fa -b /share/raid12/chenjinfeng/FFgenome/assmbly/simulateSeq/chr04_500_30_75_reads2.fa -D /share/raid12/chenjinfeng/FFgenome/assmbly/simulateSeq/chr04.txt.index -o /share/raid12/chenjinfeng/FFgenome/assmbly/assmbleview/soapout.txt -2 unpair > log2

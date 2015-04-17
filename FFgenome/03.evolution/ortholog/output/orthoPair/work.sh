@@ -1,0 +1,1 @@
+perl ../../bin/PrepareOrthFas.pl -orth ../inparanoid/OS-BR.orth -seq1 /share/raid12/chenjinfeng/seqlib/BGI_analysis_data/rice_data/representative_orf_nuc.fa.nr.cds -seq2 /share/raid12/chenjinfeng/seqlib/BGI_analysis_data/bradi/Bradi_1.0.cds.final.fa > log 2> log2 &

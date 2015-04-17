@@ -1,0 +1,1 @@
+perl getTargetRegion.pl -fasta /share/raid12/chenjinfeng/tools/Lastz/input/all.con -table ../input/LastzHitInf.txt -gene /share/raid12/chenjinfeng/FFgenome/drawFeature/data/gff/all.con.gff -te /share/raid12/chenjinfeng/FFgenome/drawFeature/data/gff/all.con.RepeatMasker.out.gff -project Os > log &

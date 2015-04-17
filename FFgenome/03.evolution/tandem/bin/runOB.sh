@@ -1,0 +1,1 @@
+./undirected.pl -blast /share/raid12/chenjinfeng/FFgenome/ortholog/output/blasttable/OB_OB.blasttable -gff /share/raid12/chenjinfeng/FFgenome/annotation/gene/input/Oryza_brachyantha.genome.super_scaffold.v1.0.glean.gff.150_filter.2K.gff > OB.log &

@@ -1,0 +1,12 @@
+perl headmapPipe.pl -chr chr01 -riceTE ../input/IRGSP.build5.RepeatMasker.out.gff.chr -ffTE ../input/OBa.all.fa.RepeatMasker.out.gff.chr -ffGene ../input/OBa.all.gff.chr -riceGene ../input/RAP3.gff3.nr.gff.chr
+perl headmapPipe.pl -chr chr02 -riceTE ../input/IRGSP.build5.RepeatMasker.out.gff.chr -ffTE ../input/OBa.all.fa.RepeatMasker.out.gff.chr -ffGene ../input/OBa.all.gff.chr -riceGene ../input/RAP3.gff3.nr.gff.chr
+perl headmapPipe.pl -chr chr03 -riceTE ../input/IRGSP.build5.RepeatMasker.out.gff.chr -ffTE ../input/OBa.all.fa.RepeatMasker.out.gff.chr -ffGene ../input/OBa.all.gff.chr -riceGene ../input/RAP3.gff3.nr.gff.chr
+perl headmapPipe.pl -chr chr04 -riceTE ../input/IRGSP.build5.RepeatMasker.out.gff.chr -ffTE ../input/OBa.all.fa.RepeatMasker.out.gff.chr -ffGene ../input/OBa.all.gff.chr -riceGene ../input/RAP3.gff3.nr.gff.chr
+perl headmapPipe.pl -chr chr05 -riceTE ../input/IRGSP.build5.RepeatMasker.out.gff.chr -ffTE ../input/OBa.all.fa.RepeatMasker.out.gff.chr -ffGene ../input/OBa.all.gff.chr -riceGene ../input/RAP3.gff3.nr.gff.chr
+perl headmapPipe.pl -chr chr06 -riceTE ../input/IRGSP.build5.RepeatMasker.out.gff.chr -ffTE ../input/OBa.all.fa.RepeatMasker.out.gff.chr -ffGene ../input/OBa.all.gff.chr -riceGene ../input/RAP3.gff3.nr.gff.chr
+perl headmapPipe.pl -chr chr07 -riceTE ../input/IRGSP.build5.RepeatMasker.out.gff.chr -ffTE ../input/OBa.all.fa.RepeatMasker.out.gff.chr -ffGene ../input/OBa.all.gff.chr -riceGene ../input/RAP3.gff3.nr.gff.chr
+perl headmapPipe.pl -chr chr08 -riceTE ../input/IRGSP.build5.RepeatMasker.out.gff.chr -ffTE ../input/OBa.all.fa.RepeatMasker.out.gff.chr -ffGene ../input/OBa.all.gff.chr -riceGene ../input/RAP3.gff3.nr.gff.chr
+perl headmapPipe.pl -chr chr09 -riceTE ../input/IRGSP.build5.RepeatMasker.out.gff.chr -ffTE ../input/OBa.all.fa.RepeatMasker.out.gff.chr -ffGene ../input/OBa.all.gff.chr -riceGene ../input/RAP3.gff3.nr.gff.chr
+perl headmapPipe.pl -chr chr10 -riceTE ../input/IRGSP.build5.RepeatMasker.out.gff.chr -ffTE ../input/OBa.all.fa.RepeatMasker.out.gff.chr -ffGene ../input/OBa.all.gff.chr -riceGene ../input/RAP3.gff3.nr.gff.chr
+perl headmapPipe.pl -chr chr11 -riceTE ../input/IRGSP.build5.RepeatMasker.out.gff.chr -ffTE ../input/OBa.all.fa.RepeatMasker.out.gff.chr -ffGene ../input/OBa.all.gff.chr -riceGene ../input/RAP3.gff3.nr.gff.chr
+perl headmapPipe.pl -chr chr12 -riceTE ../input/IRGSP.build5.RepeatMasker.out.gff.chr -ffTE ../input/OBa.all.fa.RepeatMasker.out.gff.chr -ffGene ../input/OBa.all.gff.chr -riceGene ../input/RAP3.gff3.nr.gff.chr

@@ -1,0 +1,6 @@
+blastall -p blastn -F F -i ../output/test.fa.cut/test.fa.1 -d ../input/test.fa -o ../output/test.fa.cut/test.fa.1.blast -e 1e-10 > ../output/test.fa.cut/test.fa.1.log 2> ../output/test.fa.cut/test.fa.1.log2
+blastall -p blastn -F F -i ../output/test.fa.cut/test.fa.2 -d ../input/test.fa -o ../output/test.fa.cut/test.fa.2.blast -e 1e-10 > ../output/test.fa.cut/test.fa.2.log 2> ../output/test.fa.cut/test.fa.2.log2
+blastall -p blastn -F F -i ../output/test.fa.cut/test.fa.3 -d ../input/test.fa -o ../output/test.fa.cut/test.fa.3.blast -e 1e-10 > ../output/test.fa.cut/test.fa.3.log 2> ../output/test.fa.cut/test.fa.3.log2
+blastall -p blastn -F F -i ../output/test.fa.cut/test.fa.4 -d ../input/test.fa -o ../output/test.fa.cut/test.fa.4.blast -e 1e-10 > ../output/test.fa.cut/test.fa.4.log 2> ../output/test.fa.cut/test.fa.4.log2
+blastall -p blastn -F F -i ../output/test.fa.cut/test.fa.5 -d ../input/test.fa -o ../output/test.fa.cut/test.fa.5.blast -e 1e-10 > ../output/test.fa.cut/test.fa.5.log 2> ../output/test.fa.cut/test.fa.5.log2
+blastall -p blastn -F F -i ../output/test.fa.cut/test.fa.6 -d ../input/test.fa -o ../output/test.fa.cut/test.fa.6.blast -e 1e-10 > ../output/test.fa.cut/test.fa.6.log 2> ../output/test.fa.cut/test.fa.6.log2

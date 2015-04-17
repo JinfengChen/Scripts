@@ -1,0 +1,2 @@
+perl /share/raid12/chenjinfeng/FFgenome/evolution/GOboxplot/bin/GOparse.pl -obo /share/raid12/chenjinfeng/FFgenome/evolution/GOboxplot/input/gene_ontology.obo -wego /share/raid12/chenjinfeng/seqlib/BGI_analysis_data/brachyantha/Oryza_brachyantha.genome.super_scaffold.v1.0.glean.gff.150_filter.2K.pep.iprscan.gene.wego -table /share/raid12/chenjinfeng/FFgenome/ortholog/output/orthoPair/KsFigure/OB-OS.yn00.summary.txt -column 2 -level 3 -project OB2OS_Ks > log 2> log2 &
+

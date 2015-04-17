@@ -1,0 +1,3 @@
+perl Distance2RPKM.pl --bed ../input/OBa.mRNA.bed --gff ../input/OBa.all.manual.TE.chr.gff.type/OBa.all.manual.TE.chr.RT.gff --rpkm ../input/OBa.all.tophat.gff.expr --me ../input/OBa.all.manual.TE.chr.gff.Me.status --project OBa_RT > log 2> log2
+perl Distance2RPKM.pl --bed ../input/OBa.mRNA.bed --gff ../input/OBa.all.manual.TE.chr.gff.type/OBa.all.manual.TE.chr.GYPSY.gff --rpkm ../input/OBa.all.tophat.gff.expr --me ../input/OBa.all.manual.TE.chr.gff.Me.status --project OBa_GYPSY > log 2> log2
+perl Distance2RPKM.pl --bed ../input/OBa.mRNA.bed --gff ../input/OBa.all.manual.TE.chr.gff.type/OBa.all.manual.TE.chr.COPIA.gff --rpkm ../input/OBa.all.tophat.gff.expr --me ../input/OBa.all.manual.TE.chr.gff.Me.status --project OBa_COPIA > log 2> log2

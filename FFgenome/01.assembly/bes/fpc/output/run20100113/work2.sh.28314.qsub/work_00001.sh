@@ -1,0 +1,1 @@
+perl  /share/raid12/chenjinfeng/FFgenome/assmbly/bes/fpc/output/run20100113/../../bin/map2fpcV2.pl  >  /share/raid12/chenjinfeng/FFgenome/assmbly/bes/fpc/output/run20100113/./log  ; echo This-Work-is-Completed!

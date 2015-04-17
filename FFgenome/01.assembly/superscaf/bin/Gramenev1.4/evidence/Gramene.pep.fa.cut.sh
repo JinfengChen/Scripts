@@ -1,0 +1,1 @@
+/home/jfchen/FFproject/tools/bin/fastaDeal.pl -cutf 60 ../Gramene.pep.fa -outdir ./

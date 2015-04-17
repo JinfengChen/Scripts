@@ -1,0 +1,1 @@
+nohup perl /nas/GAG_02/minjiumeng/GACP-8.0/01.gene_finding/protein-map-genome/bin/protein_map_genome.pl --step 1234 --lines 200 --cpu 300 --blast_eval 1e-2 /home/huangqf/panfs/Oryza_FF/00.data/Arabidopsis/TAIR9_pep_20090619_representative_gene_model /home/huangqf/panfs/Oryza_FF/02.assembly/Oryza_brachyantha.genome.super_scaffold.v1.0.fa &

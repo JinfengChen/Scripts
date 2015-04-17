@@ -1,0 +1,1 @@
+perl ../mcscan_interval_chr.pl -refgff ../../input/Os.gff -refpep ../../input/Os.pep -refgff3 ../../input/Os.gff3.chr/chr03 -reffasta ../../input/Os.fasta.chr/chr03 -qrygff ../../input/Ob.gff -qrypep ../../input/Ob.pep -qrygff3 ../../input/Ob.gff3.chr/chr03 -qryfasta ../../input/Ob.fasta.chr/chr03 -align ../../input/chr_All/chr03.align -chr chr03 > log 2> log2 &

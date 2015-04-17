@@ -1,0 +1,4 @@
+perl orthTE2Expression.pl --orth ../input/OB-OS.orth --inf1 ./Distance2Expression/allTE/0.1/normalized/type/1kb/OBa_5UTR.gene.closestTE.inf --inf2 ./Distance2Expression/allTE/0.1/normalized/type/1kb/rice_5UTR.gene.closestTE.inf --project orth_OBa_rice_5UTR >log 2>log2
+perl orthTE2Expression.pl --orth ../input/OB-OS.orth --inf1 ./Distance2Expression/allTE/0.1/normalized/type/1kb/OBa_3UTR.gene.closestTE.inf --inf2 ./Distance2Expression/allTE/0.1/normalized/type/1kb/rice_3UTR.gene.closestTE.inf --project orth_OBa_rice_3UTR > log 2> log2
+perl orthTE2Expression.pl --orth ../input/OB-OS.orth --inf1 ./Distance2Expression/allTE/0.1/normalized/type/1kb/OBa_all.gene.closestTE.inf --inf2 ./Distance2Expression/allTE/0.1/normalized/type/1kb/rice_all.gene.closestTE.inf --project orth_OBa_rice_all > log 2> log2 
+

@@ -1,0 +1,1 @@
+ perl verify2scafV4.pl -q ../data/Scaffold000001.fa -t ../data/all.con -b ../data/scaffold1ToRiceblastm8 -g ../data/all.con.gff3.clear -r ../data/all.con.RepeatMasker.out.gff -i 88 -l 500 > log 2> log2 &

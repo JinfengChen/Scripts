@@ -1,0 +1,1 @@
+perl statGFFlarge.pl -gff /share/raid12/chenjinfeng/seqlib/BGI_analysis_data/Zea_mays/ZmB73_4a.53.final.gff -fasta /share/raid12/chenjinfeng/seqlib/BGI_analysis_data/Zea_mays/ZmB73_4a.53.genome.fa > maize 2> log2 &

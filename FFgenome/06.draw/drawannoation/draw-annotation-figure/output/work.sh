@@ -1,0 +1,1 @@
+perl ../bin/map_genome.pl ../input/test_3chrs.fa.gff --run multi --gene ../input/test_3chrs.fa.bgf.gff --genemark bgf --gene ../input/test_3chrs.fa.genscan.gff --genemark genscan --feature ../input/test_3chrs.fa.RepeatMasker.out.gff --featmark TE --feature ../input/test_3chrs.fa.trf.dat.gff --featmark TRF

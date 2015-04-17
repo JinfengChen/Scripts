@@ -1,0 +1,1 @@
+ perl statGFFmaize.pl -gff /share/raid12/chenjinfeng/seqlib/BGI_analysis_data/Sorghum_bicolor/Sb.final.gff -fasta /share/raid12/chenjinfeng/seqlib/BGI_analysis_data/Sorghum_bicolor/Sb.genome.fa > SB &

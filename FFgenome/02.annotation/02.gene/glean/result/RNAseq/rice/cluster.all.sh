@@ -1,0 +1,10 @@
+perl /nas/GAG_02/minjiumeng/software2/bin/cluster/cluster_genes_on_genomic_locus.pl -length 100 -percent 10 -outdir ./cluster1275447420 ./cluster1275447420/0.gff ./cluster1275447420/0.cds.len 
+perl /nas/GAG_02/minjiumeng/software2/bin/cluster/cluster_genes_on_genomic_locus.pl -length 100 -percent 10 -outdir ./cluster1275447420 ./cluster1275447420/1.gff ./cluster1275447420/1.cds.len 
+perl /nas/GAG_02/minjiumeng/software2/bin/cluster/cluster_genes_on_genomic_locus.pl -length 100 -percent 10 -outdir ./cluster1275447420 ./cluster1275447420/2.gff ./cluster1275447420/2.cds.len 
+perl /nas/GAG_02/minjiumeng/software2/bin/cluster/cluster_genes_on_genomic_locus.pl -length 100 -percent 10 -outdir ./cluster1275447420 ./cluster1275447420/3.gff ./cluster1275447420/3.cds.len 
+perl /nas/GAG_02/minjiumeng/software2/bin/cluster/cluster_genes_on_genomic_locus.pl -length 100 -percent 10 -outdir ./cluster1275447420 ./cluster1275447420/4.gff ./cluster1275447420/4.cds.len 
+perl /nas/GAG_02/minjiumeng/software2/bin/cluster/cluster_genes_on_genomic_locus.pl -length 100 -percent 10 -outdir ./cluster1275447420 ./cluster1275447420/5.gff ./cluster1275447420/5.cds.len 
+perl /nas/GAG_02/minjiumeng/software2/bin/cluster/cluster_genes_on_genomic_locus.pl -length 100 -percent 10 -outdir ./cluster1275447420 ./cluster1275447420/6.gff ./cluster1275447420/6.cds.len 
+perl /nas/GAG_02/minjiumeng/software2/bin/cluster/cluster_genes_on_genomic_locus.pl -length 100 -percent 10 -outdir ./cluster1275447420 ./cluster1275447420/7.gff ./cluster1275447420/7.cds.len 
+perl /nas/GAG_02/minjiumeng/software2/bin/cluster/cluster_genes_on_genomic_locus.pl -length 100 -percent 10 -outdir ./cluster1275447420 ./cluster1275447420/8.gff ./cluster1275447420/8.cds.len 
+perl /nas/GAG_02/minjiumeng/software2/bin/cluster/cluster_genes_on_genomic_locus.pl -length 100 -percent 10 -outdir ./cluster1275447420 ./cluster1275447420/9.gff ./cluster1275447420/9.cds.len 

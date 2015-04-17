@@ -1,0 +1,7 @@
+perl GOparse.pl -obo ../input/gene_ontology.obo -wego /share/raid12/chenjinfeng/seqlib/BGI_analysis_data/brachyantha/Oryza_brachyantha.genome.super_scaffold.v1.0.glean.gff.150_filter.2K.pep.iprscan.gene.wego -table /share/raid12/chenjinfeng/FFgenome/ortholog/output/orthoPair/KsFigure/OB-OS.yn00.summary.txt -column 3 -level 3 -project OB2OS_KaKs > log 2> log2 &
+
+perl GOparse.pl -obo ../input/gene_ontology.obo -wego /share/raid12/chenjinfeng/seqlib/BGI_analysis_data/brachyantha/Oryza_brachyantha.genome.super_scaffold.v1.0.glean.gff.150_filter.2K.pep.iprscan.gene.wego -table /share/raid12/chenjinfeng/FFgenome/ortholog/output/orthoPair/KsFigure/KaKs_calculator/OB-BR.KaKs.summary.txt -column 3 -level 3 -project OB2BR_KaKs > log 2> log2 &
+
+perl GOparse.pl -obo ../input/gene_ontology.obo -wego /share/raid12/chenjinfeng/seqlib/BGI_analysis_data/rice_data/representative_orf.fa.nr.pep.iprscan.gene.wego -table /share/raid12/chenjinfeng/FFgenome/ortholog/output/orthoPair/KsFigure/KaKs_calculator/OS-BR.KaKs.summary.txt -column 3 -level 3 -project OS2BR_KaKs > log 2> log2 &
+
+perl GOparse.pl -obo ../input/gene_ontology.obo -wego /share/raid12/chenjinfeng/seqlib/BGI_analysis_data/Sorghum_bicolor/Sb.final.pep.iprscan.gene.wego -table /share/raid12/chenjinfeng/FFgenome/ortholog/output/orthoPair/KsFigure/KaKs_calculator/SB-ZM.KaKs.summary.txt -column 3 -level 3 -project SB2ZM_KaKs > log 2> log2 &

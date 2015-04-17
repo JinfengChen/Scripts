@@ -1,0 +1,2 @@
+perl SumTypeNum.pl --dir ./
+

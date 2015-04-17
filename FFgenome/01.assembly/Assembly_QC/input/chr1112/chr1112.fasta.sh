@@ -1,0 +1,2 @@
+RepeatMasker -lib /home/jfchen/159/FFproject/FFgenome/02.annotation/01.repeat/1.repeat/manual/TElib-FF -nolow -xsmall -no_is -norna -engine wublast .//chr1112.fasta.cut/chr1112.fasta.1 > .//chr1112.fasta.cut/chr1112.fasta.1.log 2> .//chr1112.fasta.cut/chr1112.fasta.1.log2
+RepeatMasker -lib /home/jfchen/159/FFproject/FFgenome/02.annotation/01.repeat/1.repeat/manual/TElib-FF -nolow -xsmall -no_is -norna -engine wublast .//chr1112.fasta.cut/chr1112.fasta.2 > .//chr1112.fasta.cut/chr1112.fasta.2.log 2> .//chr1112.fasta.cut/chr1112.fasta.2.log2

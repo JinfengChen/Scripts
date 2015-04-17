@@ -1,0 +1,1 @@
+perl statGFFmaize.pl -gff /share/raid12/chenjinfeng/FFgenome/annotation/gene/input/Oryza_brachyantha.genome.super_scaffold.v1.0.glean.gff.150_filter.2K.gff -fasta /share/raid12/chenjinfeng/FFgenome/genome/scaffold/20k/super-scaffold.fa > FF &

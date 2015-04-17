@@ -1,0 +1,1 @@
+perl  /share/raid12/chenjinfeng/FFgenome/evolution/kaks_pairwise/bin/script_yn00/Prepare_yn00.pl  /share/raid12/chenjinfeng/FFgenome/ortholog/output/orthoPair/OB-OS/./  >  /share/raid12/chenjinfeng/FFgenome/ortholog/output/orthoPair/OB-OS/./log  2>  /share/raid12/chenjinfeng/FFgenome/ortholog/output/orthoPair/OB-OS/./log2  ; echo This-Work-is-Completed!

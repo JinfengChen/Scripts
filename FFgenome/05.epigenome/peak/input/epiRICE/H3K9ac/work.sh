@@ -1,0 +1,1 @@
+perl ../../../bin/peakanalysis.pl -ref /home/jfchen/epigenome/peak/input/tigr6.1/all.fa -read SRR034635.fastq,SRR034636.fastq,SRR034637.fastq -tsize 35 -gsize 400000000 -project H3K9ac -flat /home/jfchen/epigenome/peak/input/tigr6.1/annotation/refFlat.txt > log &

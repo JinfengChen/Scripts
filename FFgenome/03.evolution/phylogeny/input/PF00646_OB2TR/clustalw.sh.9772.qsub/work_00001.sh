@@ -1,0 +1,1 @@
+/share/raid1/genome/bin/clustalw  /share/raid12/chenjinfeng/FFgenome/evolution/phylogeny/input/PF00646_OB2TR/./PF00646_Fbox.fa  >  /share/raid12/chenjinfeng/FFgenome/evolution/phylogeny/input/PF00646_OB2TR/./log  2>  /share/raid12/chenjinfeng/FFgenome/evolution/phylogeny/input/PF00646_OB2TR/./log2  ; echo This-Work-is-Completed!
