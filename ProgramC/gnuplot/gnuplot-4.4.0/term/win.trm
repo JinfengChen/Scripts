@@ -1,0 +1,1191 @@
+/* Hello, Emacs, this is -*-C-*-
+ * $Id: win.trm,v 1.65.2.11 2010/02/24 20:41:29 sfeam Exp $
+ */
+
+/* GNUPLOT - win.trm */
+
+/*[
+ * Copyright 1992 - 1993, 1998, 2004
+ *
+ * Permission to use, copy, and distribute this software and its
+ * documentation for any purpose with or without fee is hereby granted,
+ * provided that the above copyright notice appear in all copies and
+ * that both that copyright notice and this permission notice appear
+ * in supporting documentation.
+ *
+ * Permission to modify the software is granted, but not the right to
+ * distribute the complete modified source code.  Modifications are to
+ * be distributed as patches to the released version.  Permission to
+ * distribute binaries produced by compiling modified sources is granted,
+ * provided you
+ *   1. distribute the corresponding source modifications from the
+ *    released version in the form of a patch file along with the binaries,
+ *   2. add special version identification to distinguish your version
+ *    in addition to the base release version number,
+ *   3. provide your name and address as the primary contact for the
+ *    support of your modified version, and
+ *   4. retain our contact information in regard to use of the base
+ *    software.
+ * Permission to distribute the released version of the source code along
+ * with corresponding source modifications in the form of a patch file is
+ * granted with same provisions 2 through 4 for binary distributions.
+ *
+ * This software is provided "as is" without express or implied warranty
+ * to the extent permitted by applicable law.
+]*/
+
+/*
+ *
+ * AUTHORS
+ *
+ *   Gnuplot for Windows:
+ *       Maurice Castro, Russell Lang
+ *
+ */
+
+
+/* This file implements the terminal and printer display for gnuplot  */
+/* under Microsoft Windows.                                           */
+/*                                                                    */
+/* The modifications to allow Gnuplot to run under Windows were made  */
+/* by Maurice Castro (maurice@bruce.cs.monash.edu.au)                 */
+/* and Russell Lang (rjl@monu1.cc.monash.edu.au)         19 Nov 1992  */
+/*                                                                    */
+
+/* Edit this file with tabstop=4 (vi :se ts=4)                        */
+
+/*
+ * adapted to the new terminal layout by Stefan Bodewig (Dec. 1995)
+ */
+
+#include "driver.h"
+
+#ifdef TERM_REGISTER
+register_term(windows)
+#endif
+
+#ifdef TERM_PROTO
+TERM_PUBLIC void WIN_options __PROTO((void));
+TERM_PUBLIC void WIN_init __PROTO((void));
+TERM_PUBLIC void WIN_reset __PROTO((void));
+TERM_PUBLIC void WIN_text __PROTO((void));
+TERM_PUBLIC void WIN_graphics __PROTO((void));
+TERM_PUBLIC void WIN_move __PROTO((unsigned int x, unsigned int y));
+TERM_PUBLIC void WIN_vector __PROTO((unsigned int x, unsigned int y));
+TERM_PUBLIC void WIN_linetype __PROTO((int lt));
+TERM_PUBLIC void WIN_put_text __PROTO((unsigned int x, unsigned int y, const char *str));
+TERM_PUBLIC int WIN_justify_text __PROTO((enum JUSTIFY mode));
+TERM_PUBLIC int WIN_text_angle __PROTO((int ang));
+TERM_PUBLIC void WIN_point __PROTO((unsigned int x, unsigned int y, int number));
+TERM_PUBLIC void WIN_resume __PROTO((void));
+TERM_PUBLIC void WIN_set_pointsize __PROTO((double));
+TERM_PUBLIC void WIN_linewidth __PROTO((double linewidth));
+#ifdef USE_MOUSE
+TERM_PUBLIC void WIN_set_ruler __PROTO((int, int));
+TERM_PUBLIC void WIN_set_cursor __PROTO((int, int, int));
+TERM_PUBLIC void WIN_put_tmptext __PROTO((int, const char str[]));
+TERM_PUBLIC void WIN_set_clipboard __PROTO((const char[]));
+TERM_PUBLIC int WIN_waitforinput __PROTO((void));
+#endif
+TERM_PUBLIC int WIN_make_palette __PROTO((t_sm_palette *palette));
+TERM_PUBLIC void WIN_set_color __PROTO((t_colorspec *));
+TERM_PUBLIC void WIN_filled_polygon __PROTO((int points, gpiPoint *corners));
+TERM_PUBLIC void WIN_boxfill __PROTO((int, unsigned int, unsigned int, unsigned int, unsigned int));
+/* To support "set term win enhanced" */
+TERM_PUBLIC int WIN_set_font __PROTO((const char *font));
+TERM_PUBLIC void WIN_enhanced_put_text __PROTO((unsigned int x, unsigned int y, const char *str));
+TERM_PUBLIC void WIN_enhanced_open __PROTO((char * fontname, double fontsize,
+	    		double base, TBOOLEAN widthflag, TBOOLEAN showflag,
+			int overprint));
+TERM_PUBLIC void WIN_enhanced_flush __PROTO((void));
+TERM_PUBLIC void WIN_image __PROTO((unsigned int, unsigned int, coordval *, gpiPoint *, t_imagecolor));
+
+
+/* Initialization values - Guess Now Scale later */
+#define WIN_XMAX (24000)
+#define WIN_YMAX (18000)
+#define WIN_HCHAR (WIN_XMAX/75)
+#define WIN_VCHAR (WIN_YMAX/25)
+#define WIN_HTIC (WIN_XMAX/160)
+#define WIN_VTIC WIN_HTIC
+#endif /* TERM_PROTO */
+
+#ifndef TERM_PROTO_ONLY
+#ifdef TERM_BODY
+
+#include <windows.h>
+#include "win/winmain.h"
+
+#ifdef __MSC__
+#include <io.h>			/* for mktemp() */
+#endif
+
+#define WIN_POINT_TYPES 15	/* 20010411: raised */
+
+/* Interface routines - create list of actions for Windows */
+
+enum WIN_id { WIN_DEFAULT, WIN_MONOCHROME, WIN_COLOR, WIN_GTITLE,
+	      WIN_ENHANCED, WIN_NOENHANCED, WIN_FONT, WIN_SIZE, 
+	      WIN_POSITION, WIN_CLOSE, WIN_OTHER };
+
+static struct gen_table WIN_opts[] =
+{
+    { "d$efault", WIN_DEFAULT },
+    { "m$onochrome", WIN_MONOCHROME },
+    { "c$olor", WIN_COLOR },
+    { "c$olour", WIN_COLOR },
+    { "noenh$anced", WIN_NOENHANCED },
+    { "enh$anced", WIN_ENHANCED },
+    { "font", WIN_FONT },
+    { "ti$tle", WIN_GTITLE },
+    { "siz$e", WIN_SIZE },
+    { "pos$ition", WIN_POSITION },
+    { "cl$ose", WIN_CLOSE },
+    { NULL, WIN_OTHER }
+};
+
+static char *WIN_gtitle = NULL;
+
+static int WIN_last_linetype = LT_NODRAW; /* HBB 20000813: linetype caching */
+
+/* these variables are needed for enhanced text only */
+
+/* FIXME: these are duplicates of struct graphwin members */
+static char WIN_font[MAXFONTNAME] = WINFONT; 
+static int WIN_fontsize = WINFONTSIZE;
+static double WIN_angle = 0.;  /* unit is radian */
+
+/* FIXME: these should most likely be members of struct graphwin */
+static unsigned int WIN_x = 0;
+static unsigned int WIN_y = 0;
+static enum JUSTIFY WIN_justification = LEFT;
+
+/* state variables for enhanced text processing */
+static TBOOLEAN ENHwin_opened_string;
+static TBOOLEAN ENHwin_show = TRUE;
+static int ENHwin_overprint = 0;
+static TBOOLEAN ENHwin_widthflag = TRUE;
+static TBOOLEAN ENHwin_sizeonly = FALSE;
+static double ENHwin_base;
+
+
+TERM_PUBLIC void
+WIN_options()
+{
+    char *s;
+    TBOOLEAN set_font = FALSE, set_fontsize = FALSE;
+    TBOOLEAN set_title=FALSE, set_close = FALSE;
+    /* shige */
+    static int readinit=0;
+
+    if (!readinit){
+	ReadGraphIni(&graphwin);
+	readinit=1;
+    }
+
+    while (!END_OF_COMMAND) {
+	switch(lookup_table(&WIN_opts[0],c_token)) {
+	case WIN_DEFAULT:
+	    graphwin.color = TRUE;
+	    strcpy(graphwin.fontname, WINFONT);
+	    graphwin.fontsize = WINFONTSIZE;
+	    strcpy(graphwin.deffontname, WINFONT);
+	    graphwin.deffontsize = WINFONTSIZE;
+	    graphwin.Title = WINGRAPHTITLE;
+	    set_title = TRUE;
+	    c_token++;
+	    break;
+	case WIN_MONOCHROME:
+	    graphwin.color = FALSE;
+	    term->flags |= TERM_MONOCHROME;
+	    c_token++;
+	    break;
+	case WIN_SIZE:
+	{
+	    int win_width = 0;
+	    int win_height = 0;
+	    c_token++;
+	    if (END_OF_COMMAND)
+		int_error(c_token,"size requires 'width,heigth'");
+	    win_width = real_expression();
+	    if (!equals(c_token++,","))
+		int_error(c_token,"size requires 'width,heigth'");
+	    win_height = real_expression();
+	    if (win_width < 1 || win_height < 1)
+		int_error(c_token, "size is out of range");
+	    
+	    graphwin.Size.x = win_width;
+	    graphwin.Size.y = win_height + graphwin.statuslineheight;
+	    break;
+	}
+	case WIN_POSITION:
+	{
+	    int win_x = 0;
+	    int win_y = 0;
+	    c_token++;
+	    if (END_OF_COMMAND)
+		int_error(c_token,"position requires 'x,y'");
+	    win_x = real_expression();
+	    if (!equals(c_token++,","))
+		int_error(c_token,"position requires 'x,y'");
+	    win_y = real_expression();
+	    if (win_x < 1 || win_y < 1)
+		int_error(c_token, "position is out of range");
+	    
+	    graphwin.Origin.x = win_x;
+	    graphwin.Origin.y = win_y;
+	    break;
+	}
+	case WIN_COLOR:
+	    graphwin.color = TRUE;
+	    term->flags &= ~TERM_MONOCHROME;
+	    c_token++;
+	    break;
+	case WIN_ENHANCED:
+	    c_token++;
+	    term->put_text = WIN_enhanced_put_text;
+	    term->flags |= TERM_ENHANCED_TEXT;
+	    break;
+	case WIN_NOENHANCED:
+	    c_token++;
+	    term->put_text = WIN_put_text;
+	    term->flags &= ~TERM_ENHANCED_TEXT;
+	    break;
+	case WIN_GTITLE:
+	    c_token++;
+	    set_title = TRUE;
+	    free(WIN_gtitle);
+	    WIN_gtitle = try_to_get_string();
+	    break;
+	case WIN_CLOSE:
+	    c_token++;
+	    set_close = TRUE;
+	    break;
+	case WIN_FONT:
+	    c_token++;
+	    /* Fall through to attempt to read font name */
+	case WIN_OTHER:
+	default:
+	    /* Code copied from ps.trm and modified for windows terminal */
+	    if ((s = try_to_get_string())) {
+		char *comma;
+		if (set_font)
+		    int_error(c_token,
+			      "extraneous argument in set terminal %s",
+			      term->name);
+		set_font = TRUE;
+	        comma = strrchr(s,',');
+	        if (comma && (1 == sscanf(comma+1,"%i", &graphwin.fontsize))) {
+		    graphwin.deffontsize = graphwin.fontsize;
+		    set_fontsize = TRUE;
+		    *comma = '\0';
+		}
+		if (*s) {
+		    strncpy(graphwin.fontname, s, MAX_ID_LEN);
+		    strcpy(graphwin.deffontname, graphwin.fontname);
+		    free(s);
+    		}
+	    } else {
+		if (set_fontsize)
+		    int_error(c_token,
+			      "extraneous argument in set terminal %s",
+			      term->name);
+		set_fontsize = TRUE;
+		/* We have font size specified */
+		graphwin.fontsize = int_expression();
+		graphwin.deffontsize = graphwin.fontsize;
+	    }
+	    break;
+	}
+    }
+
+    if (graphwin.fontname[0] == '\0')
+	sprintf(term_options, "%s %s", 
+		graphwin.color ? "color" : "monochrome", 
+		term->flags & TERM_ENHANCED_TEXT ? "enhanced" : "noenhanced");
+    else
+	sprintf(term_options, "%s %s font \"%s, %d\"",
+		graphwin.color ? "color" : "monochrome",
+		term->flags & TERM_ENHANCED_TEXT ? "enhanced" : "noenhanced",
+		graphwin.fontname, graphwin.fontsize);
+
+    if (set_close) {
+	win_close_terminal_window(&graphwin);
+	return;
+    }
+
+    if (IsWindow(graphwin.hWndGraph) && IsIconic(graphwin.hWndGraph))
+	ShowWindow(graphwin.hWndGraph, SW_SHOWNORMAL);
+
+    graphwin.Title = (WIN_gtitle ? WIN_gtitle : WINGRAPHTITLE);
+    if (set_title) GraphChangeTitle(&graphwin);
+
+    GraphRedraw(&graphwin);
+}
+
+/* We don't actually do scaling, but we need to fix up the text size
+ * if the user has resized the window.
+ * Routine unused -- terminals are not allowed to do their own scale().
+ */
+#if 0
+int
+WIN_scale()
+{
+    term->h_char = graphwin.hchar;
+    term->v_char = graphwin.vchar;
+    term->h_tic = graphwin.htic;
+    term->v_tic = graphwin.vtic;
+    sprintf(term_options, "%s \"%s\" %d",
+	    graphwin.color ? "color" : "monochrome",
+	    graphwin.fontname, graphwin.fontsize);
+    return FALSE;		/* can't be done */
+}
+#endif
+
+TERM_PUBLIC void
+WIN_init()
+{
+    if (!graphwin.hWndGraph) {
+	graphwin.xmax = WIN_XMAX;
+	graphwin.ymax = WIN_YMAX;
+	graphwin.htic = WIN_HTIC;
+	graphwin.vtic = WIN_VTIC;
+	GraphInit(&graphwin);
+#ifdef WIN32
+	SetClassLong(graphwin.hWndGraph, GCL_HICON, (LONG) LoadIcon(graphwin.hInstance, "GRPICON"));
+#else
+	SetClassWord(graphwin.hWndGraph, GCW_HICON, LoadIcon(graphwin.hInstance, "GRPICON"));
+#endif
+	graphwin.resized = FALSE;
+    }
+    WIN_last_linetype = LT_NODRAW;	/* HBB 20000813: linetype caching */
+}
+
+
+TERM_PUBLIC void
+WIN_reset()
+{
+}
+
+TERM_PUBLIC void
+WIN_text()
+{
+    GraphEnd(&graphwin);
+}
+
+TERM_PUBLIC void
+WIN_graphics()
+{
+    GraphStart(&graphwin, pointsize);
+    WIN_last_linetype = LT_NODRAW;		/* HBB 20000813: linetype caching */
+}
+
+TERM_PUBLIC void
+WIN_move(unsigned int x, unsigned int y)
+{
+    /* Notice HBB 20010208: on Win32 platforms, passing int or
+     * unsigned int arguments to GraphOp() might cause problems: int
+     * is 32bits, but GraphOp() args are 16bit WORDS. */
+    GraphOp(&graphwin, W_move, x, y, NULL);
+
+    /* save current position, only needed for enhanced text */
+    WIN_x = x; 
+    WIN_y = y;
+}
+
+TERM_PUBLIC void
+WIN_vector(unsigned int x, unsigned int y)
+{
+    /* Notice HBB 20010208: --> WIN_move() */
+    GraphOp(&graphwin, W_vect, x, y, NULL);
+}
+
+TERM_PUBLIC void
+WIN_linetype(int lt)
+{
+    if (lt != WIN_last_linetype) {
+	/* Notice HBB 20010208: --> see WIN_move() */
+    	GraphOp(&graphwin, W_line_type, lt, 0, NULL);
+	WIN_last_linetype = lt;
+    }
+}
+
+TERM_PUBLIC void
+WIN_put_text(unsigned int x, unsigned int y, const char *str)
+{
+    /* Notice HBB 20010208: --> WIN_move() */
+    GraphOp(&graphwin, W_put_text, x, y, str);
+}
+
+TERM_PUBLIC int
+WIN_justify_text(enum JUSTIFY mode)
+{
+    /* Notice HBB 20010208: --> WIN_move() */
+    GraphOp(&graphwin, W_justify, mode, 0, NULL);
+    /* store text justification, only needed for enhanced text */
+    WIN_justification = mode;
+    return (TRUE);
+}
+
+TERM_PUBLIC int
+WIN_text_angle(int ang)
+{
+    if (graphwin.rotate) {
+	/* Notice HBB 20010208: --> WIN_move() */
+ 	GraphOp(&graphwin, W_text_angle, ang, 0, NULL);
+
+        /* store text angle, only needed for enhanced text */
+	WIN_angle = (double)ang * M_PI / 180.;
+    }
+    return graphwin.rotate;
+}
+
+TERM_PUBLIC void
+WIN_point(unsigned int x, unsigned int y, int number)
+{
+    /* draw point shapes later to save memory */
+    /* size of point symbols */
+    graphwin.htic = pointsize * term->h_tic / 2;
+    graphwin.vtic = pointsize * term->v_tic / 2;
+    /* HBB 20010411: secure against pointtype -1 or lower */
+    if (number < -1)
+	number = -1;		/* refuse nonsense values */
+    if (number >= 0)
+	number %= WIN_POINT_TYPES;
+    number += 1;
+    /* Notice HBB 20010208: --> WIN_move() */
+    GraphOp(&graphwin, W_dot + number, x, y, NULL);
+}
+
+TERM_PUBLIC void
+WIN_resume()
+{
+    GraphResume(&graphwin);
+}
+
+TERM_PUBLIC void
+WIN_set_pointsize(double s)
+{
+    /* Save new pointsize as string */
+    char scale[30];
+
+    if (s < 0)
+	s = 1;
+    sprintf(scale, "%.15g", s);
+#if 1
+    /* HBB 980309: it seems passing it as a string is a bad idea
+     * in Win16: it means the wgnuplot.dll has to parse the string
+     * via sscanf(), leading to crash (by stack overflow?). Alternative:
+     * pass it as a scaled-up integer. For the sake of compatibility,
+     * pass the string as well. */
+    /* Notice HBB 20010208: --> WIN_move() */
+    GraphOp(&graphwin, W_pointsize, (int) 100 * s, 0, scale);
+#else
+    GraphOp(&graphwin, W_pointsize, 0, 0, scale);
+#endif
+}
+
+TERM_PUBLIC void
+WIN_linewidth(double linewidth)
+{
+    /* HBB 20000813: New routine */
+    WIN_last_linetype = LT_NODRAW;        /* invalidate cached linetype */
+    /* Notice HBB 20010208: --> WIN_move() */
+    GraphOp(&graphwin, W_line_width, (int) 100 * linewidth, 0, NULL);
+}
+
+#ifdef USE_MOUSE
+
+/* Implemented by Petr Mikulik, February 2001 --- the best Windows solutions
+ * come from OS/2 :-))
+ */
+
+TERM_PUBLIC void
+WIN_put_tmptext ( int i, const char str[] )
+{
+    Graph_put_tmptext(&graphwin, i, str );
+}
+
+TERM_PUBLIC void
+WIN_set_ruler ( int x, int y )
+{
+    Graph_set_ruler(&graphwin, x, y );
+}
+
+TERM_PUBLIC void
+WIN_set_cursor ( int c, int x, int y )
+{
+    Graph_set_cursor(&graphwin, c, x, y );
+}
+
+TERM_PUBLIC void
+WIN_set_clipboard ( const char s[] )
+{
+    Graph_set_clipboard(&graphwin, s);
+}
+
+#ifdef WGP_CONSOLE
+
+TERM_PUBLIC int
+WIN_waitforinput  ()
+{
+    return ConsoleGetch();
+}
+
+#endif /* WGP_CONSOLE */
+
+#endif /* USE_MOUSE */
+
+
+/* Note: this is a verbatim copy of PM_image (pm.trm) with only minor changes */
+
+TERM_PUBLIC void
+WIN_image(unsigned int M, unsigned int N, coordval *image,
+	  gpiPoint *corner, t_imagecolor color_mode)
+{
+    PBYTE rgb_image;
+    unsigned int image_size;
+    unsigned int pad_bytes;
+
+    /* IC_PALETTE and IC_RGB images are converted to a 24bit RGB format
+       suitable for Windows:
+        - sequence of lines is reversed 
+        - each line starts at a 4 byte boundary
+    */
+
+    /* fprintf(stderr, "WIN_image: %i x %i, mode=%s\n", M, N, color_mode==IC_RGB?"IC_RGB":"IC_PALETTE" ); */
+    pad_bytes = (4 - (3 * M) % 4) % 4; /* scan lines start on ULONG boundaries */
+
+    image_size = (M + pad_bytes ) * N * 3;
+    rgb_image = (PBYTE) gp_alloc(image_size, "WIN RGB image");
+
+    if (color_mode == IC_PALETTE) {
+    	unsigned int x, y;
+
+	rgb_image += N * (3 * M + pad_bytes);
+	for (y=0; y<N; y++) {
+	    rgb_image -= 3 * M + pad_bytes;
+	    for(x=0; x<M; x++) {
+		rgb255_color rgb255;
+		rgb255maxcolors_from_gray(*image++, &rgb255);
+		*(rgb_image++) = rgb255.b;
+		*(rgb_image++) = rgb255.g;
+		*(rgb_image++) = rgb255.r;
+	    }
+	    rgb_image -= 3 * M;
+	}
+    } else if (color_mode == IC_RGB) {
+    	unsigned int x, y;
+
+	rgb_image += N * (3 * M + pad_bytes);
+	for (y=0; y<N; y++) {
+	    rgb_image -= 3 * M + pad_bytes;
+	    for(x=0; x<M; x++) {
+		rgb255_color rgb255;
+		rgb255.r = (BYTE) (*image++ * 255 + 0.5);
+		rgb255.g = (BYTE) (*image++ * 255 + 0.5);
+		rgb255.b = (BYTE) (*image++ * 255 + 0.5);
+		*(rgb_image++) = rgb255.b;
+		*(rgb_image++) = rgb255.g;
+		*(rgb_image++) = rgb255.r;
+	    }
+	    rgb_image -= 3 * M;
+	}
+#if (0) /* Alpha channel transparency not implemented  yet */
+    } else if (color_mode == IC_RGBA) {
+    	unsigned int x, y;
+
+	rgb_image += N * (3 * M + pad_bytes);
+	for (y=0; y<N; y++) {
+	    rgb_image -= 3 * M + pad_bytes;
+	    for(x=0; x<M; x++) {
+		rgb255_color rgb255;
+		rgb255.r = (BYTE) (*image++ * 255 + 0.5);
+		rgb255.g = (BYTE) (*image++ * 255 + 0.5);
+		rgb255.b = (BYTE) (*image++ * 255 + 0.5);
+		image++; /* Throw away alpha channel */
+		*(rgb_image++) = rgb255.b;
+		*(rgb_image++) = rgb255.g;
+		*(rgb_image++) = rgb255.r;
+	    }
+	    rgb_image -= 3 * M;
+	}
+#endif
+    }
+
+    /* squeze all the information into the buffer */
+    if ((color_mode == IC_PALETTE) || (color_mode == IC_RGB)) {
+        GraphOp(&graphwin, W_image, corner[0].x, corner[0].y, NULL);
+        GraphOp(&graphwin, W_image, corner[1].x, corner[1].y, NULL);
+        GraphOp(&graphwin, W_image, corner[2].x, corner[2].y, NULL);
+        GraphOp(&graphwin, W_image, corner[3].x, corner[3].y, NULL);
+	/* GraphOp() cannot be used here since the image might 
+	   contain char(0), so use  GraphOpSize() instead */
+        GraphOpSize(&graphwin, W_image, M, N, rgb_image, image_size);
+    }
+
+    free(rgb_image);
+}
+
+
+TERM_PUBLIC int
+WIN_make_palette(t_sm_palette *palette)
+{
+    /* Win can do continuous colors. However, we round them only to WIN_PAL_COLORS levels
+     * in order to pass an integer to GraphOp; it also reasonably limits
+     * the number of colors if "copy to clipboard" is used.
+     * EAM: Would it be better to use the approximate_palette() mechanism instead,
+     * like the x11 terminal?
+     */
+    return WIN_PAL_COLORS;
+}
+
+TERM_PUBLIC void
+WIN_set_color(t_colorspec *colorspec)
+{
+    switch (colorspec->type ) {
+	case TC_FRAC:
+	    GraphOp(&graphwin, W_pm3d_setcolor, (int)(WIN_PAL_COLORS*colorspec->value), 0, NULL);
+	    break;
+	case TC_RGB:
+	    GraphOp(&graphwin, W_pm3d_setcolor, (colorspec->lt) & 0xffff, 0xff00 | ((colorspec->lt >> 16) & 0x00ff), NULL);
+	    break;
+	case TC_LT:
+	    GraphOp(&graphwin, W_pm3d_setcolor, colorspec->lt, TC_LT << 8, NULL);
+	    break;
+    }
+    WIN_last_linetype = LT_NODRAW;
+}
+
+TERM_PUBLIC void
+WIN_filled_polygon(int points, gpiPoint *corners)
+{
+    int i;
+    /* FIXME:  fillstyle is ignored by the polygon code in wgraph.c
+     * This is an experiment to see if we can piggyback on the fillbox() code
+     * to set a pattern brush that will stay in effect for the polygon fill.
+     */
+    if (corners->style != FS_OPAQUE)
+	WIN_boxfill(corners->style, corners->x, corners->y, 0, 1);
+
+    for (i=0; i<points; i++)
+    	GraphOp(&graphwin, W_pm3d_filled_polygon_pt, corners[i].x, corners[i].y, NULL);
+    /* finish series: */
+    GraphOp(&graphwin, W_pm3d_filled_polygon_draw, points, 0, NULL);
+}
+
+TERM_PUBLIC void
+WIN_boxfill(
+    int style,
+    unsigned int xleft, unsigned int ybottom,
+    unsigned int width, unsigned int height)
+{
+    /* split into multiple commands to squeeze through all the necessary info */
+    GraphOp(&graphwin, W_fillstyle, style, 0, NULL);
+    GraphOp(&graphwin, W_move, xleft, ybottom, NULL);
+    GraphOp(&graphwin, W_boxfill, width, height, NULL);
+}
+
+
+TERM_PUBLIC int
+WIN_set_font(const char *font)
+{
+    char fontname[MAXFONTNAME];
+    int  fontsize;
+
+    if (font != NULL) {
+	if (font[0] == '\0') {
+	    strcpy(fontname, graphwin.deffontname);
+	    fontsize = graphwin.deffontsize;
+	} else {
+	    char *size;
+
+	    size = strrchr(font, ',');
+	    if (size == NULL) {
+		/* only font name given */
+		strcpy(fontname, font);
+    		fontsize = graphwin.deffontsize;
+	    } else if (size == font) {
+		/* only font size given */
+		strcpy(fontname, graphwin.deffontname);
+		sscanf(size+1,"%i", &fontsize);
+	    } else {
+		/* full font information supplied */
+		strncpy(fontname, font, size-font);
+		fontname[size-font] = '\0';
+		sscanf(size+1,"%i", &fontsize);
+	    }
+	}
+    }
+
+    if (font != NULL) {
+	GraphOp(&graphwin, W_font, fontsize, 0, fontname);
+        strcpy(WIN_font, fontname);
+        WIN_fontsize = fontsize;
+    }
+    else {
+	GraphOp(&graphwin, W_font, 0, 0, "");
+        strcpy(WIN_font, graphwin.deffontname);
+        WIN_fontsize = graphwin.deffontsize;
+    }
+    return TRUE;
+}
+
+
+TERM_PUBLIC void
+WIN_enhanced_open(
+    char *fontname,
+    double fontsize, double base,
+    TBOOLEAN widthflag, TBOOLEAN showflag,
+    int overprint)
+{
+    static const int win_scale = 40; /* scaling of base offset */  
+    static unsigned int ENHwin_xsave, ENHwin_ysave;
+    char *fontstring;
+
+    /* There are two special cases:
+     * overprint = 3 means save current position
+     * overprint = 4 means restore saved position
+     */
+    if (overprint == 3) {
+	ENHwin_xsave = WIN_x;
+	ENHwin_ysave = WIN_y;
+	return;
+    } else if (overprint == 4) {
+	WIN_x = ENHwin_xsave;
+	WIN_y = ENHwin_ysave;
+	return;
+    }
+
+    if (!ENHwin_opened_string) {
+	ENHwin_opened_string = TRUE;
+
+	/* Start new text fragment */
+	enhanced_cur_text = &enhanced_text[0];
+
+	/* Keep track of whether we are supposed to show this string */
+	ENHwin_show = showflag;
+
+	/* 0/1/2  no overprint / 1st pass / 2nd pass */
+	ENHwin_overprint = overprint;
+
+	/* widthflag FALSE means do not update text position after printing */
+	ENHwin_widthflag = widthflag;
+
+	/* Scale fractional font height to vertical units of display */
+	/* FIXME:	
+		Font scaling is not done properly (yet) and will lead to
+		non-optimal results for most font and size selections.
+		OUTLINEFONTMETRICS could be used for better here.
+	*/
+	ENHwin_base = win_scale * base;
+	 
+ 	/* Select font */
+	/* FIXME: It would be nice to have fractional font sizes 
+	          for super- and subscripts. */
+	/* FIXME: sometimes fontname has zero length */
+	if ((fontname != NULL) && strlen(fontname) > 0) {
+	    fontstring = malloc(strlen(fontname) + 16);
+	    sprintf(fontstring, "%s,%i", fontname, (int)fontsize);
+	} else {
+	    fontstring = malloc( strlen(graphwin.deffontname) + 16 );
+	    sprintf( fontstring, "%s,%i", graphwin.deffontname, (int)fontsize);
+	}
+	WIN_set_font( fontstring );
+	free( fontstring );
+   }
+}
+
+
+TERM_PUBLIC void
+WIN_enhanced_flush()
+{
+    static unsigned int ENHwin_xsave, ENHwin_ysave;
+
+    if (ENHwin_opened_string) {
+	int width, height;
+	unsigned int x, y, len;
+
+	*enhanced_cur_text = '\0';
+	
+	/* print the string fragment, perhaps invisibly */
+	/* NB: base expresses offset from current y pos */
+	x = WIN_x - ENHwin_base * sin(WIN_angle);
+	y = WIN_y + ENHwin_base * cos(WIN_angle);
+
+	/* calculate length of string first */
+    	len = GraphGetTextLength(&graphwin, enhanced_text, WIN_font, WIN_fontsize);
+	width = cos(WIN_angle) * len;
+	height = sin(WIN_angle) * len;
+
+	if (ENHwin_show && !ENHwin_sizeonly) {
+	    /* display string */
+	    GraphOp(&graphwin, W_put_text, x, y, enhanced_text);
+	}
+
+	/* update drawing position according to len */
+	if (!ENHwin_widthflag) {
+	    width = 0; 
+	    height = 0;
+	}
+	if (ENHwin_sizeonly) {
+	    /* This is the first pass for justified printing.        */
+	    /* We just adjust the starting position for second pass. */
+	    if (WIN_justification == RIGHT) {
+		WIN_x -= width;
+		WIN_y -= height;
+	    }
+	    else if (WIN_justification == CENTRE) {
+		WIN_x -= width / 2;
+		WIN_y -= height / 2;
+	    }
+	    /* nothing to do for LEFT justified text */
+	}
+	else if (ENHwin_overprint == 1) {
+	    /* Save current position */
+	    ENHwin_xsave = WIN_x + width;
+	    ENHwin_ysave = WIN_y + height;
+	    /* First pass of overprint, leave position in center of fragment */
+	    WIN_x += width / 2;
+	    WIN_y += height / 2;
+	}
+	else if (ENHwin_overprint == 2) {
+	    /* Restore current position,                          */
+	    /* this sets the position behind the overprinted text */
+	    WIN_x = ENHwin_xsave;
+	    WIN_y = ENHwin_ysave;
+	}
+	else {
+	    /* Normal case is to update position to end of fragment */
+	    WIN_x += width;
+	    WIN_y += height;
+	}
+
+	ENHwin_opened_string = FALSE;
+    }
+}
+
+
+TERM_PUBLIC void
+WIN_enhanced_put_text(unsigned int x, unsigned int y, const char *str)
+{
+    char *original_string = (char *)str;
+    unsigned int pass, num_passes;
+    char* copy_WIN_font;
+
+    /* If no enhanced text processing is needed, we can use the plain  */
+    /* vanilla put_text() routine instead of this fancy recursive one. */
+    if (ignore_enhanced_text || !strpbrk(str, "{}^_@&~")) {
+	WIN_put_text(x,y,str);
+	return;
+    }
+
+    /* Set up global variables needed by enhanced_recursion() */
+    ENHwin_opened_string = FALSE;
+    enhanced_fontscale = 1.0;
+    strncpy(enhanced_escape_format,"%c",sizeof(enhanced_escape_format));
+
+    /* Tell the terminal to move the drawing position */
+    /* we store the current position to WIN_x and WIN_y */
+    WIN_x = x; 
+    WIN_y = y;
+
+    /* Text justification requires two passes. During the first pass we */
+    /* don't draw anything, we just measure the space it will take.     */
+    /* Without justification one pass is enough                         */
+    if (WIN_justification == LEFT) {
+	num_passes = 1;
+    }
+    else {
+	num_passes = 2;
+	ENHwin_sizeonly = TRUE; 
+    }
+
+    /* make a backup copy of the fontname to use 
+       for enhanced recursion */
+    copy_WIN_font = strdup(WIN_font);
+    
+    for( pass=1; pass <= num_passes; pass++ ) {
+
+	/* Set the recursion going. We say to keep going until a
+	* closing brace, but we don't really expect to find one.
+	* If the return value is not the nul-terminator of the
+	* string, that can only mean that we did find an unmatched
+	* closing brace in the string. We increment past it (else
+	* we get stuck in an infinite loop) and try again.
+	*/
+	while (*(str = enhanced_recursion((char *)str, TRUE,
+			copy_WIN_font, WIN_fontsize,
+			0.0, TRUE, TRUE, 0))) {
+	    (term->enhanced_flush)();
+
+	    /* I think we can only get here if *str == '}' */
+	    enh_err_check(str);
+
+	    if (!*++str)
+	    	break; /* end of string */
+
+	    /* else carry on and process the rest of the string */
+	}
+
+	/* In order to do text justification we need to do a second pass that */
+	/* uses information stored during the first pass.                     */
+	/* see WIN_enhanced_flush()                                           */
+	if (pass == 1) {
+	    /* do the actual printing in the next pass */
+	    ENHwin_sizeonly = FALSE;
+	    str = original_string;
+
+	    /* temporarily switch to left alignment since we do it ourselves */
+	    GraphOp(&graphwin, W_justify, LEFT, 0, NULL);
+	}
+    }
+    free(copy_WIN_font);
+
+    /* restore default font */
+    WIN_set_font(NULL); 
+
+    /* restore text alignment */
+    if (num_passes > 1)
+        GraphOp(&graphwin, W_justify, WIN_justification, 0, NULL);
+}
+
+#endif /* TERM_BODY */
+
+#ifdef TERM_TABLE
+
+TERM_TABLE_START(win_driver)
+    "windows", "Microsoft Windows",
+    WIN_XMAX, WIN_YMAX, WIN_VCHAR, WIN_HCHAR,
+    WIN_VTIC, WIN_HTIC, WIN_options, WIN_init, WIN_reset,
+    WIN_text, null_scale, WIN_graphics, WIN_move, WIN_vector,
+    WIN_linetype, WIN_put_text, WIN_text_angle,
+    WIN_justify_text, WIN_point, do_arrow, WIN_set_font,
+    WIN_set_pointsize, TERM_CAN_MULTIPLOT|TERM_NO_OUTPUTFILE,
+    WIN_text /* suspend */ , WIN_resume,
+    WIN_boxfill, WIN_linewidth
+#ifdef USE_MOUSE
+# ifdef WGP_CONSOLE
+    , WIN_waitforinput , 
+# else
+    , 0 /* WIN_waitforinput */,
+# endif /* WGP_CONSOLE */
+    WIN_put_tmptext, WIN_set_ruler, WIN_set_cursor, WIN_set_clipboard
+#endif
+    , WIN_make_palette, 0 /* previous_palette */,
+    WIN_set_color, WIN_filled_polygon
+    , WIN_image
+    , WIN_enhanced_open, WIN_enhanced_flush, do_enh_writec
+TERM_TABLE_END(win_driver)
+
+#undef LAST_TERM
+#define LAST_TERM win_driver
+
+#endif /* TERM_TABLE */
+#endif /* TERM_PROTO_ONLY */
+
+#ifdef TERM_HELP
+START_HELP(windows)
+"1 windows",
+"?commands set terminal windows",
+"?set terminal windows",
+"?set term windows",
+"?terminal windows",
+"?term windows",
+"?windows",
+" Three options may be set in the `windows` terminal driver.",
+"",
+" Syntax:",
+"       set terminal windows {color | monochrome}",
+"                            {enhanced | noenhanced}",
+"                            {{font} \"fontname{,fontsize}\" {<fontsize>}}",
+"                            {title \"Plot Window Title\"}",
+"                            {size <width>,<height>}",
+"                            {position <x>,<y>}",
+"                            {close}",
+"",
+" where `color` and `monochrome` select colored or mono output,", 
+" `enhanced` enables enhanced text mode features (subscripts,",
+" superscripts and mixed fonts). See `enhanced` for more information.",
+" `\"<fontname>\"` is the name of a valid Windows font, and `<fontsize>`",
+" is the size of the font in points.",
+" `size` defines the width and height of the window in pixel and `position`",
+" the origin of the window i.e. the position of the top left corner on the",
+" screen (again in pixel). Both these options override the default settings",
+" from the WGNUPLOT.INI file (see below).",
+"",
+" Other options may be set with the graph-menu or the initialization file.",
+"",
+" The Windows version normally terminates immediately as soon as the end of",
+" any files given as command line arguments is reached (i.e. in non-interactive",
+" mode), unless you specify `-` as the last command line option.",
+" It will also not show the text-window at all, in this mode, only the plot.",
+" By giving the optional argument `-persist` (same as for gnuplot under x11;",
+" former Windows-only options `/noend` or `-noend` are still accepted as well),",
+" will not close gnuplot. Contrary to gnuplot on other operating systems,",
+" gnuplot's interactive command line is accessible after the -persist option.",
+"",
+" The plot window remains open even when the gnuplot driver is changed to a",
+" different device. The plot window can be close with `set term windows close`",
+"2 graph-menu",
+"?commands set terminal windows graph-menu",
+"?set terminal windows graph-menu",
+"?set term windows graph-menu",
+"?windows graph-menu",
+"?graph-menu",
+" The `gnuplot graph` window has the following options on a pop-up menu",
+" accessed by pressing the right mouse button or selecting `Options` from the",
+" system menu:",
+"",
+" `Bring to Top` when checked brings the graph window to the top after every",
+" plot.",
+"",
+" `Color` when checked enables color linestyles.  When unchecked it forces",
+" monochrome linestyles.",
+"",
+" `Copy to Clipboard` copies a bitmap and an enhanced Metafile picture.",
+"",
+" `Save as EMF...` allows the user to save the current graph window as enhanced metafile",
+"",
+" `Background...` sets the window background color.",
+"",
+" `Choose Font...` selects the font used in the graphics window.",
+"",
+" `Line Styles...` allows customization of the line colors and styles.",
+"",
+" `Print...` prints the graphics windows using a Windows printer driver and",
+" allows selection of the printer and scaling of the output.  The output",
+" produced by `Print` is not as good as that from `gnuplot`'s own printer",
+" drivers.",
+"",
+" `Update wgnuplot.ini` saves the current window locations, window sizes, text",
+" window font, text window font size, graph window font, graph window font",
+" size, background color and linestyles to the initialization file",
+" `WGNUPLOT.INI`.",
+"2 printing",
+"?commands set terminal windows printing",
+"?set terminal windows printing",
+"?set term windows printing",
+"?windows printing",
+"?printing",
+" In order of preference, graphs may be be printed in the following ways.",
+"",
+" `1.` Use the `gnuplot` command `set terminal` to select a printer and `set",
+" output` to redirect output to a file.",
+"",
+" `2.` Select the `Print...` command from the `gnuplot graph` window.  An extra",
+" command `screendump` does this from the text window.",
+"",
+" `3.` If `set output \"PRN\"` is used, output will go to a temporary file.  When",
+" you exit from `gnuplot` or when you change the output with another `set",
+" output` command, a dialog box will appear for you to select a printer port.",
+" If you choose OK, the output will be printed on the selected port, passing",
+" unmodified through the print manager.  It is possible to accidentally (or",
+" deliberately) send printer output meant for one printer to an incompatible",
+" printer.",
+"2 text-menu",
+"?commands set terminal windows text-menu",
+"?set terminal windows text-menu",
+"?set term windows text-menu",
+"?windows text-menu",
+"?text-menu",
+" The `gnuplot text` window has the following options on a pop-up menu accessed",
+" by pressing the right mouse button or selecting `Options` from the system",
+" menu:",
+"",
+" `Copy to Clipboard` copies marked text to the clipboard.",
+"",
+" `Paste` copies text from the clipboard as if typed by the user.",
+"",
+" `Choose Font...` selects the font used in the text window.",
+"",
+" `System Colors` when selected makes the text window honor the System Colors",
+" set using the Control Panel.  When unselected, text is black or blue on a",
+" white background.",
+"",
+" `Update wgnuplot.ini` saves the current text window location, text window",
+" size, text window font and text window font size to the initialisation file",
+" `WGNUPLOT.INI`.",
+"",
+" `MENU BAR`",
+"",
+" If the menu file `WGNUPLOT.MNU` is found in the same directory as",
+" WGNUPLOT.EXE, then the menu specified in `WGNUPLOT.MNU` will be loaded.",
+" Menu commands:",
+"",
+" [Menu] starts a new menu with the name on the following line.",
+"",
+" [EndMenu] ends the current menu.",
+"",
+" [--] inserts a horizontal menu separator.",
+"",
+" [|] inserts a vertical menu separator.",
+"",
+" [Button] puts the next macro on a push button instead of a menu.",
+"",
+" Macros take two lines with the macro name (menu entry) on the first line and",
+" the macro on the second line.  Leading spaces are ignored.  Macro commands:",
+"",
+" [INPUT] --- Input string with prompt terminated by [EOS] or {ENTER}",
+"",
+" [EOS] --- End Of String terminator.  Generates no output.",
+"",
+" [OPEN] --- Get name of file to open from list box, with title of list box",
+" terminated by [EOS], followed by default filename terminated by [EOS] or",
+" {ENTER}.",
+"",
+" [SAVE] --- Get name of file to save.  Similar to [OPEN]",
+"",
+" Macro character substitutions:",
+"",
+" {ENTER} --- Carriage Return '\\r'",
+"",
+" {TAB} --- Tab '\\011'",
+"",
+" {ESC} --- Escape '\\033'",
+"",
+" {^A} --- '\\001'",
+"",
+" ...",
+"",
+" {^_} --- '\\031'",
+"",
+" Macros are limited to 256 characters after expansion.",
+"2 wgnuplot.ini",
+"?commands set terminal windows wgnuplot.ini",
+"?set terminal windows wgnuplot.ini",
+"?set term windows wgnuplot.ini",
+"?windows wgnuplot.ini",
+"?wgnuplot.ini",
+" Windows `gnuplot` will read some of its options from the `[WGNUPLOT]` section",
+" of `WGNUPLOT.INI` in user's %APPDATA% directory.  A sample `WGNUPLOT.INI` file:",
+"",
+"       [WGNUPLOT]",
+"       TextOrigin=0 0",
+"       TextSize=640 150",
+"       TextFont=Terminal,9",
+"       GraphOrigin=0 150",
+"       GraphSize=640 330",
+"       GraphFont=Arial,10",
+"       GraphColor=1",
+"       GraphToTop=1",
+"       GraphBackground=255 255 255",
+"       Border=0 0 0 0 0",
+"       Axis=192 192 192 2 2",
+"       Line1=0 0 255 0 0",
+"       Line2=0 255 0 0 1",
+"       Line3=255 0 0 0 2",
+"       Line4=255 0 255 0 3",
+"       Line5=0 0 128 0 4",
+"",
+" The `GraphFont` entry specifies the font name and size in points.  The five",
+" numbers given in the `Border`, `Axis` and `Line` entries are the `Red`",
+" intensity (0--255), `Green` intensity, `Blue` intensity, `Color Linestyle`",
+" and `Mono Linestyle`.  `Linestyles` are 0=SOLID, 1=DASH, 2=DOT, 3=DASHDOT,",
+" 4=DASHDOTDOT.  In the sample `WGNUPLOT.INI` file above, Line 2 is a green",
+" solid line in color mode, or a dashed line in monochrome mode.  The default",
+" line width is 1 pixel.  If `Linestyle` is negative, it specifies the width of",
+" a SOLID line in pixels.  Line1 and any linestyle used with the `points` style",
+" must be SOLID with unit width."
+END_HELP(windows)
+#endif /* TERM_HELP */

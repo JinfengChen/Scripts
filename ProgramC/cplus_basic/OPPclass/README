@@ -1,0 +1,81 @@
+1. rectangle.h
+define the class and declare member function
+
+//header file rectangle.h of class "Rectangle"
+
+#include <iostream>
+using namespace std;
+class Rectangle { // define class 
+      public:
+            Rectangle (int x, int y, int h, int w); // constructor with parameter
+            Rectangle ()
+            {xLow=0; yLow=0; height=0; width=0;} // constructor without parameter
+            ~Rectangle () {}; // destructor, no need to implemented
+            int GetHeight (); // member function to return height
+            int GetWidth (); // member function to return width
+            int GetArea (); // member function to return area
+      private:
+            int xLow, yLow, height, width;
+};
+
+2. rectangle.cpp
+implemented the member function of rectangle.h
+
+//source file rectangle.cpp of class "Rectangle"
+//in this file the member function in rectangle.h should be implemented
+#include "rectangle.h"
+
+Rectangle::Rectangle (int x, int y, int h, int w)
+{
+   xLow=x;
+   yLow=y;
+   height=h;
+   width =w;
+}
+
+int Rectangle::GetHeight(){return height;}
+int Rectangle::GetWidth(){return width;}
+int Rectangle::GetArea(){return height*wid
+
+3. main.cpp
+use the class and functions
+
+//main source file main.cpp to use the class "Rectangle"
+#include <iostream>
+#include "rectangle.h" //only include the header file of class
+
+int main (){
+
+     Rectangle r(2,3,4,5), s(3,2,4,6); // r and s are object of class Rectangle
+     int rarea=r.GetArea();
+     int sarea=s.GetArea();
+     if (r.GetHeight() * r.GetWidth() > s.GetHeight() * s.GetWidth())
+        cout<<"r ";
+     else cout<<"s ";
+     cout<<"has the greater area "<< sarea <<endl;
+}
+
+4. compile
+use either g++ or Makefile to compile the source files
+
+g++ -o oppclass main.cpp rectangle.cpp
+make
+
+Makefile:
+oppclass: main.o rectangle.o
+        g++ main.o rectangle.o -o oppclass
+
+main.o: main.cpp rectangle.h
+        g++ -c main.cpp
+
+rectangle.o: rectangle.cpp rectangle.h
+        g++ -c rectangle.cpp
+
+clean: 
+        @echo "cleaning project"
+        -rm oppclass *.o
+        @echo "clean completed"
+
+.PHONY: clean
+
+

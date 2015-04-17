@@ -1,0 +1,266 @@
+CLUSTAL W (1.81) multiple sequence alignment
+
+
+mel             ATGCCTGGACTTGTGGTCTTCAGACGTCGCTGGTCTGTGGGCTCTGATGATCTCGTGGTG
+yak             ATGCCTGGACTTGTGGTCTTCAGACGTCGCTGGTCTGTGGGCTCCGATGATCTCGTGGTG
+                ******************************************** ***************
+
+mel             CCGGGCGCATTTCTCCTGACGATTCATTTTATATGTTTTGTGATTGTTAGCGTCTCGTTG
+yak             CCGGGCGCATTTCTCCTGACGATTCATTTTATATGTTTTGTGATTGTTAGCGTCTCGTTG
+                ************************************************************
+
+mel             GTTATCTTTGAGTATAATACACGAATTTTAAGCGTAAAATTATTGTTCTATCATCTAATA
+yak             GTTATCTTTGAGTATAATACACGAATTTTAAGCGTAAAATTATTGTTCTATCATCTAATA
+                ************************************************************
+
+mel             GGCTACTTGTTGATACTATTTTTTTCAATATGTGTAGAAATAGGTATATGTGTGATCTCG
+yak             GGCTACTTGTTGATACTATTTTTTTCAATATGTGTAGAAATAGGTATATGTGTGATCTCG
+                ************************************************************
+
+mel             ATGCGTGGCAGTATTCTGGATGCCGAGGCGCGCACCTCAATCAACATTTGGATATATCTC
+yak             ATGCGTGGCAGCATTTTGGATGCCGAGGCGCGCACCTCAATCAACATCTGGATATATCTC
+                *********** *** ******************************* ************
+
+mel             AAGAGCTTGGTTATCCTGTTCGATATTGCCTGGCTGGCGGTGGGATCCGTTTGGCTGGGG
+yak             AAGAGCCTGGTAATCCTGTTCGATATTGCCTGGCTGGCGGTGGGCTCCGTTTGGCTGGGG
+                ****** **** ******************************** ***************
+
+mel             CATTACTACACCACTGCACCGATCGATGATCCCAAAAAGGTCTACATAGCAATTATCATC
+yak             CATTACTACACCACTGCACCCATCGATGATCCCAAAAAGGTCTACATAGCAATTATCATC
+                ******************** ***************************************
+
+mel             TGCAATTGGGCTCTGGTGGTGATCACCCTAATCACGATATGGTGCACCTTCGATGCTGCC
+yak             TGCAATTGGGCCCTGGTGGTGATCACCCTCATTACGATATGGTGCACCTTCGATGCTGCC
+                *********** ***************** ** ***************************
+
+mel             GGAAGATCCTGGGTAAAGATGAAGAAGTACCAGCGATCAATGCGCGAAACAGAGTCTCGG
+yak             GGCAGATCCTGGGTAAAGATGAAGAAGTACCAGCGATCCATGCGCGAAACGGAGTCGCGC
+                ** *********************************** *********** ***** ** 
+
+mel             TTTAACTACAAGCGGAGCAACAGTATGAACCGCAACTGGCGACAAAGGAAAGTGATGCGA
+yak             TTTAACTATAAGCGGAGCAACAGTATGAACCGCAACTGGCGGCAAAGGAAAGTGATGCGT
+                ******** ******************************** ***************** 
+
+mel             GCCTACCAGGATAGTTGGGATCATCGCTGCCGCCTGCTATTCTGCTGCATGGGCTCCTCG
+yak             GCCTACCAGGACAGTTGGGATCATCGCTGCCGCCTGCTGTTCTGCTGCATGGGCTCCTCG
+                *********** ************************** *********************
+
+mel             GAGCGCAACCGAAACTCATTCACGGACATCGCCCGTCTGCTGAGCGACTTCTTTCGGGAG
+yak             GAGCGTAACCGGAACTCGTTTACGGACATTGCCCGCCTGCTGAGCGACTTCTTTCGGGAG
+                ***** ***** ***** ** ******** ***** ************************
+
+mel             TTGGACGTGGTGCCGTCGGATGTGGTGGCCGGATTAGTTCTGCTTCGCAAGTTTCAGCGT
+yak             CTGGACGTGGTGCCATCGGATGTGGTGGCGGGATTAGTACTGCTACGCAAGTTTCAGCGT
+                 ************* ************** ******** ***** ***************
+
+mel             CTCGAACGCGAGGCCATTGTGAGGCAGCGCAAAAATGGCACCTATGAGTTCCTCAGCGGC
+yak             CTTGAACGCGAGGCCATTGTGCGGCAGCGCAAGAATGGCACCTACGAGTTCCTCAGCGGC
+                ** ****************** ********** *********** ***************
+
+mel             GTACCGATTACGGAGCGAACCCAGTTCCTAGCACTCAACGATGCCAAAAACTATGACTTC
+yak             GTACCGATCACGGAGCGGACCCAGTTCCTAGCACTCAACGATGCCAAAAACTATGACTTC
+                ******** ******** ******************************************
+
+mel             TTTCAAACGGTCATCCACTATATGTACTTTGCCCAGGGAGCCTACGGTTGGCCCATGTAC
+yak             TTTCAAACGGTCATCCACTACATGTACTTTGCCCAGGGCGCTTACGGCTGGCCCATGTAC
+                ******************** ***************** ** ***** ************
+
+mel             GTCATCATCAATCGCAGCAAGATGTGGCATTTGGTGCCGGAACTGAAATGCTTTGGCTGC
+yak             GTCATCATCAATCGCAGCAAGATGTGGCACTTGGTGCCGGAACTGAAATGCTTTGGCTGC
+                ***************************** ******************************
+
+mel             TGTTGCGGTACAAGTGATGATACAGAGGTTATCCAGGACAATTGCTGCCTGTGCAACTAT
+yak             TGTTGCGGCACAAGTGATGATACGGAGGTGATCCAAGACAATTGCTGCCTGTGCAACTAT
+                ******** ************** ***** ***** ************************
+
+mel             GCAGCGCTGAAGAAGACGCTCCAGCTGGGCGACATCGATATCGTTTACGCCACCTATCAC
+yak             GCGGCGCTAAAGAAGACGCTACAGCTGGGCGACATCGATATCGTTTATGCCACCTATCAC
+                ** ***** *********** ************************** ************
+
+mel             GTGGATGTGGGCGAGACGCCCTTCTTTGTGGCCATCGACTATACACATCGGGCGGTTGTG
+yak             GTGGACGTGGGCGAGACGCCATTCTTTGTGGCCATCGATTACACGCACCGATCGGTTGTG
+                ***** ************** ***************** ** ** ** **  ********
+
+mel             ATCAGCATACGTGGTACCCTTAGCATGAAGGACATACTTACGGATCTGAACGCCGAGGGC
+yak             ATCAGCATACGTGGTACACTTAGCATGAAGGACATCCTTACGGATCTGAATGCCGAGGGT
+                ***************** ***************** ************** ******** 
+
+mel             GAAGTTCTGCCGCTGCAGCCGCCGCGTGACGATTGGCTGGGCCACAAGGGAATGGTGCAA
+yak             GAAGTGTTGCCGCTGCAGCCGCCGCGTGACGATTGGCTGGGCCACAAGGGGATGGTGCAA
+                *****  ******************************************* *********
+
+mel             GCGGCGATCTACATACGCAACAAGCTGCAGGAGGAGAATCTCATCGAGAGGGCACTGCAA
+yak             GCGGCGATCTACATACGCAACAAGCTGCAGGAGGAGAACCTAATCGAGCGGGCACTGCAA
+                ************************************** ** ****** ***********
+
+mel             CGGAATCCGGACCGTCAGACGCACACCTTTGATCTGGTGCTGGTGGGCCATTCGCTGGGC
+yak             CGGAATCCGGACCGCCAGACGCACACCTTTGACCTGGTGCTGGTGGGCCATTCGCTGGGC
+                ************** ***************** ***************************
+
+mel             GCCGGAACAGCGGCCATACTCGCCATTCTCCTTAAGCCCGAGCATCCAACGCTCCAGTGC
+yak             GCTGGCACAGCGGCCATACTCGCCATTCTCCTAAAGCCCGAGCATCCCACGCTCCAGTGC
+                ** ** ************************** ************** ************
+
+mel             TTCAGTTACTCTCCGCCAGGAGGTCTGCTCAGTATGCCAGCCGTGGAGTACTCAAAGTCG
+yak             TTCAGTTACTCGCCGCCAGGAGGTCTGCTCAGTATGCCCGCCGTGGAGTACTCAAAGTCG
+                *********** ************************** *********************
+
+mel             TTCATCACCTCGGTGGTGCTGGGCAAGGATGTAGTGCCGCGCATCGGTCTCAATCAAATG
+yak             TTCATCACCTCGGTGGTCCTGGGCAAGGACGTAGTGCCGCGCATCGGTCTCAATCAAATG
+                ***************** *********** ******************************
+
+mel             GAGGCCCTGCGAGCGGACCTTATCAATGCCATTCAGCGCAGCGTGGATCCCAAGTGGAAG
+yak             GAGGCCCTGCGAGCCGATCTTATCAATGCGATTCAGCGCAGCGTGGATCCCAAGTGGAAG
+                ************** ** *********** ******************************
+
+mel             ACCATTTCCTGCTCGGTCATCTGCTGTGGCTGTGGACCCGAACCCACTTCCGTGGTCAAC
+yak             ACCATTTCCTGTTCGGTCATCTGCTGTGGCTGTGGACCCGAGCCCACTTCCGTGGTCAAC
+                *********** ***************************** ******************
+
+mel             ATGTCCGGCCAGGACACGCACATCAATCAGTACCAGGAGGAGCGTGGCACTGCCCGTTCG
+yak             ATGTCCGGCCAGGACACGCACATTAATCAGTACCAGGAGGAGCGCGGCACTGCACGTTCG
+                *********************** ******************** ******** ******
+
+mel             ACCAGCGCTCATCCGACGGACAGCTCGATAGCTTTAACTCTGCACCAGCCCTTATATCCG
+yak             ACCAGCGCTCATCCGACGGACAGCTCGATAGCTTTAACCCTGCACCAGCCCTTATATCCG
+                ************************************** *********************
+
+mel             CCCGGTCGCATCATTCACATAGTGCGACATCATCCCAAGCCCGACGAGCAAAAATACGAC
+yak             CCCGGTCGCATCATTCACATTGTGCGGCACCATCCCAAGCCCGACGAGCAAAAATACGAC
+                ******************** ***** ** ******************************
+
+mel             AGTGGTTGGAGAAATGTTCTGAAAAATCGGGAGCCCGTATATCAGGCAATCTGGGCCGAT
+yak             AGTGGTTGGAGAAATGTTCTAAAGAATCGGGAGCCCGTTTACCAGGCCATCTGGGCCGAC
+                ******************** ** ************** ** ***** *********** 
+
+mel             TCCACGGACTTCGATGAGGTGCTCATCTCGCCGGTGATGCTGCAGGATCACATGCCCGAC
+yak             TCCACGGACTTCGATGAGGTGCTCATCTCGCCGGTGATGCTGCAGGATCACATGCCCGAC
+                ************************************************************
+
+mel             AAGGTTCTCGCCGCCCTCAAGAAGGTCGTGTCTTGTAGAGATCGAACCGTAAAGGCATGT
+yak             AAGGTGCTCGCCGCCCTCAAGAAGGTCGTGTCTTGTAGAGATCGAACCGTAAAGGCATGT
+                ***** ******************************************************
+
+mel             ACCACTCGTAGACGT---------------------------------------------
+yak             ACCACTCGTAGACGT---------------------------------------------
+                ***************                                             
+
+mel             ---------------AATGATAACACGACAATAACTACAACTACAACAGTT---ACAACA
+yak             ---------------AATGATAACACGACAATAACTACAACTACAACAGTTACAACAACA
+                               ************************************   ******
+
+mel             ACAACTACGACAACACAAAATACAGATACCAGGTACAGCCGCCCGCCTTCTATA------
+yak             ACAACTACGACAACACAAAATACAGATACCAGGTACAGCCGCCCGCCTTCTATA------
+                ******************************************************      
+
+mel             ------------------------------------------------------------
+yak             ------------------------------------------------------------
+                                                                            
+
+mel             ------------------------------------------------------------
+yak             ------------------------------------------------------------
+                                                                            
+
+mel             ------------------------------------------------------------
+yak             ------------------------------------------------------------
+                                                                            
+
+mel             ------------------------------------------------------------
+yak             ------------------------------------------------------------
+                                                                            
+
+mel             ------------------------------------------------------------
+yak             ------------------------------------------------------------
+                                                                            
+
+mel             ------------------------------------------------------------
+yak             ------------------------------------------------------------
+                                                                            
+
+mel             ------------------------------------------------------------
+yak             ------------------------------------------------------------
+                                                                            
+
+mel             ------------------------------------------------------------
+yak             ------------------------------------------------------------
+                                                                            
+
+mel             ------------------------------------------------------------
+yak             ------------------------------------------------------------
+                                                                            
+
+mel             ------------------------------------------------------------
+yak             ------------------------------------------------------------
+                                                                            
+
+mel             ------------------------------------------------------------
+yak             ------------------------------------------------------------
+                                                                            
+
+mel             ------------------------------------------------------------
+yak             ------------------------------------------------------------
+                                                                            
+
+mel             ------------------------------------------------------------
+yak             ------------------------------------------------------------
+                                                                            
+
+mel             ------------------------------------------------------------
+yak             ------------------------------------------------------------
+                                                                            
+
+mel             ------------------------------------------------------------
+yak             ------------------------------------------------------------
+                                                                            
+
+mel             ------------------------------------------------------------
+yak             ------------------------------------------------------------
+                                                                            
+
+mel             ------------------------------------------------------------
+yak             ------------------------------------------------------------
+                                                                            
+
+mel             ------------------------------------------------------------
+yak             ------------------------------------------------------------
+                                                                            
+
+mel             ------------------------------------------------------------
+yak             ------------------------------------------------------------
+                                                                            
+
+mel             ------------------------------------------------------------
+yak             ------------------------------------------------------------
+                                                                            
+
+mel             ------------------------------------------------------------
+yak             ------------------------------------------------------------
+                                                                            
+
+mel             ------------------------------------------------------------
+yak             ------------------------------------------------------------
+                                                                            
+
+mel             ------------------------------------------------------------
+yak             ------------------------------------------------------------
+                                                                            
+
+mel             ------------------------------------------------------------
+yak             ------------------------------------------------------------
+                                                                            
+
+mel             ------------------------------------------------------------
+yak             ------------------------------------------------------------
+                                                                            
+
+mel             ------------------------------------------------------------
+yak             ------------------------------------------------------------
+                                                                            
+
+mel             ------------------------------------------------------------
+yak             ------------------------------------------------------------
+                                                                            
+
+mel             ------------------------
+yak             ------------------------
+                                        

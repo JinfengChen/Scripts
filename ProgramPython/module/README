@@ -1,0 +1,8 @@
+>test0.py
+load module
+>test1.py
+load one method from moldue
+>test2.py
+load module or method from local module file
+>test3.py
+load class object from local class file

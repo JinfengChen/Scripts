@@ -1,0 +1,51 @@
+
+--------------------------
+Version 1.01
+Date:  4 May, 1999
+--------------------------
+
+1. included math.h in hmm.h. Not including it was creating problems
+   in forward.c.
+
+2. BaumWelch(): Convergence criterion has been changed: now stops if
+   log Prob(Obser|model_n) - log Prob(Obser|model_{n-1}) < DELTA
+   where DELTA = 0.001  in baumwelch.c. 
+
+3. esthmm: Allow user to specify the initial model by using a -I flag and
+   and then giving the hmm model file name. 
+
+   So, say you generate a sequence O using a model lambda_0. Now if 
+   you estimate the model parameters lambda_1 from the observation using
+   lambda_0 as  the intial parameter values: 
+     log Prob(O|lambda_0) and log Prob(O| lambda_1) should be close.
+
+   This is a sanity check for BaumWelch code.
+
+4. genseq: now generates random sequences everytime you run it. It also
+   has a way of specifying the random seed in the command line so that
+   you can replicate pervious experiments.
+
+5. Added a new executable: testfor. This allows you to compute
+   log Prob(O| model) using Forward() and ForwardWithScale().
+
+6. Added  postscript and PDF versions of a tutorial I gave on HMMs.
+
+7. Tested on: 
+ 	Sun Ultra 2 running UNIX SUN Solaris 5.5 and GNU gcc 2.7.2
+	DEC Alpha running  UNIX OSF version 4.0 and GNU gcc 2.8.1
+        Dell i686  running Redhat Linux 2.0.36  and GNU gcc 2.7.2.3
+
+--------------------------
+Version 1.02
+Date:  5 May, 1999
+--------------------------
+
+1. Test on:
+       Gateway Pentium 400 MHz machine running NT. The compiler
+          was gcc from Cygnus (version B20) You can get it from:
+      ftp://go.cygnus.com/pub/sourceware.cygnus.com/cygwin/latest/full.exe 
+
+2. Changed the README file, viterbi.c
+
+3. Corrected few typos in the tutorial (hmmtut.ps and hmmtut.pdf).
+

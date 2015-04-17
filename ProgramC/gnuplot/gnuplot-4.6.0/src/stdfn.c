@@ -1,0 +1,501 @@
+#ifndef lint
+static char *RCSid() { return RCSid("$Id: stdfn.c,v 1.25 2011/09/21 11:43:49 markisch Exp $"); }
+#endif
+
+/* GNUPLOT - stdfn.c */
+
+/*[
+ * Copyright 1986 - 1993, 1998, 2004   Thomas Williams, Colin Kelley
+ *
+ * Permission to use, copy, and distribute this software and its
+ * documentation for any purpose with or without fee is hereby granted,
+ * provided that the above copyright notice appear in all copies and
+ * that both that copyright notice and this permission notice appear
+ * in supporting documentation.
+ *
+ * Permission to modify the software is granted, but not the right to
+ * distribute the complete modified source code.  Modifications are to
+ * be distributed as patches to the released version.  Permission to
+ * distribute binaries produced by compiling modified sources is granted,
+ * provided you
+ *   1. distribute the corresponding source modifications from the
+ *    released version in the form of a patch file along with the binaries,
+ *   2. add special version identification to distinguish your version
+ *    in addition to the base release version number,
+ *   3. provide your name and address as the primary contact for the
+ *    support of your modified version, and
+ *   4. retain our contact information in regard to use of the base
+ *    software.
+ * Permission to distribute the released version of the source code along
+ * with corresponding source modifications in the form of a patch file is
+ * granted with same provisions 2 through 4 for binary distributions.
+ *
+ * This software is provided "as is" without express or implied warranty
+ * to the extent permitted by applicable law.
+]*/
+
+
+/* This module collects various functions, which were previously scattered
+ * all over the place. In a future implementation of gnuplot, each of
+ * these functions will probably reside in their own file in a subdirectory.
+ * - Lars Hecking
+ */
+
+#include "stdfn.h"
+
+#ifdef WIN32
+/* the WIN32 API has a Sleep function that does not consume CPU cycles */
+#include <windows.h>
+#ifndef HAVE_DIRENT_H
+#include <io.h> /* _findfirst and _findnext set errno iff they return -1 */
+#endif
+#endif
+
+
+/*
+ * ANSI C functions
+ */
+
+/* memcpy() */
+
+#ifndef HAVE_MEMCPY
+# ifndef HAVE_BCOPY
+/*
+ * cheap and slow version of memcpy() in case you don't have one
+ */
+
+char *
+memcpy(char *dest, char *src, size_t len)
+{
+    while (len--)
+	*dest++ = *src++;
+
+    return dest;
+}
+# endif				/* !HAVE_BCOPY */
+#endif /* HAVE_MEMCPY */
+
+/* strchr()
+ * Simple and portable version, conforming to Plauger.
+ * Would this be more efficient as a macro?
+ */
+#ifndef HAVE_STRCHR
+# ifndef HAVE_INDEX
+
+char *
+strchr(const char *s, int c)
+{
+    do {
+	if (*s == (char) c)
+	    return s;
+    } while (*s++ != (char) 0);
+
+    return NULL;
+}
+# endif				/* !HAVE_INDEX */
+#endif /* HAVE_STRCHR */
+
+
+/* memset ()
+ *
+ * Since we want to use memset, we have to map a possibly nonzero fill byte
+ * to the bzero function. The following defined might seem a bit odd, but I
+ * think this is the only possible way.
+ */
+
+#ifndef HAVE_MEMSET
+# ifdef HAVE_BZERO
+#  define memset(s, b, l) \
+do {                      \
+  assert((b)==0);         \
+  bzero((s), (l));        \
+} while(0)
+#  else
+#  define memset NO_MEMSET_OR_BZERO
+# endif /* HAVE_BZERO */
+#endif /* HAVE_MEMSET */
+
+
+/* strerror() */
+#ifndef HAVE_STRERROR
+
+char *
+strerror(int no)
+{
+    static char res_str[30];
+
+    if (no > sys_nerr) {
+	sprintf(res_str, "unknown errno %d", no);
+	return res_str;
+    } else {
+	return sys_errlist[no];
+    }
+}
+#endif /* HAVE_STRERROR */
+
+
+/* strstr() */
+#ifndef HAVE_STRSTR
+
+char *
+strstr(const char *cs, const char *ct)
+{
+    size_t len;
+
+    if (!cs || !ct)
+	return NULL;
+
+    if (!*ct)
+	return (char *) cs;
+
+    len = strlen(ct);
+    while (*cs) {
+	if (strncmp(cs, ct, len) == 0)
+	    return (char *) cs;
+	cs++;
+    }
+
+    return NULL;
+}
+#endif /* HAVE_STRSTR */
+
+
+/*
+ * POSIX functions
+ */
+
+#ifndef HAVE_SLEEP
+/* The implementation below does not even come close
+ * to what is required by POSIX.1, but I suppose
+ * it doesn't really matter on these systems. lh
+ */
+
+
+unsigned int
+sleep(unsigned int delay)
+{
+#if defined(MSDOS)
+# if !((defined(__EMX__) || defined(DJGPP))
+    /* kludge to provide sleep() for msc 5.1 */
+    unsigned long time_is_up;
+
+    time_is_up = time(NULL) + (unsigned long) delay;
+    while (time(NULL) < time_is_up)
+	/* wait */ ;
+# endif
+#elif defined(WIN32)
+    Sleep((DWORD) delay * 1000);
+#endif /* MSDOS ... */
+
+    return 0;
+}
+
+#endif /* HAVE_SLEEP */
+
+
+/*
+ * Other common functions
+ */
+
+/*****************************************************************
+    portable implementation of strnicmp (hopefully)
+*****************************************************************/
+#ifndef HAVE_STRCASECMP
+# ifndef HAVE_STRICMP
+
+/* return (see MSVC documentation and strcasecmp()):
+ *  -1  if str1 < str2
+ *   0  if str1 == str2
+ *   1  if str1 > str2
+ */
+int
+gp_stricmp(const char *s1, const char *s2)
+{
+    unsigned char c1, c2;
+
+    do {
+	c1 = *s1++;
+	if (islower(c1))
+	    c1 = toupper(c1);
+	c2 = *s2++;
+	if (islower(c2))
+	    c2 = toupper(c2);
+    } while (c1 == c2 && c1 && c2);
+
+    if (c1 == c2)
+	return 0;
+    if (c1 == '\0' || c1 > c2)
+	return 1;
+    return -1;
+}
+# endif				/* !HAVE_STRCASECMP */
+#endif /* !HAVE_STRNICMP */
+
+/*****************************************************************
+    portable implementation of strnicmp (hopefully)
+*****************************************************************/
+
+#ifndef HAVE_STRNCASECMP
+# ifndef HAVE_STRNICMP
+
+int
+gp_strnicmp(const char *s1, const char *s2, size_t n)
+{
+    unsigned char c1, c2;
+
+    if (n == 0)
+	return 0;
+
+    do {
+	c1 = *s1++;
+	if (islower(c1))
+	    c1 = toupper(c1);
+	c2 = *s2++;
+	if (islower(c2))
+	    c2 = toupper(c2);
+    } while (c1 == c2 && c1 && c2 && --n > 0);
+
+    if (n == 0 || c1 == c2)
+	return 0;
+    if (c1 == '\0' || c1 > c2)
+	return 1;
+    return -1;
+}
+# endif				/* !HAVE_STRNCASECMP */
+#endif /* !HAVE_STRNICMP */
+
+
+#ifndef HAVE_STRNLEN    
+size_t 
+strnlen(const char *str, size_t n)
+{
+    const char * stop = (char *)memchr(str, '\0', n);
+    return stop ? stop - str : n;
+}
+#endif
+
+
+#ifndef HAVE_STRNDUP
+char * 
+strndup(const char * str, size_t n)
+{
+    char * ret = NULL;
+    size_t len = strnlen(str, n);
+    ret = (char *) malloc(len + 1);
+    if (ret == NULL) return NULL;
+    ret[len] = '\0';
+    return (char *)memcpy(ret, str, len);
+}
+#endif
+
+
+/* Safe, '\0'-terminated version of strncpy()
+ * safe_strncpy(dest, src, n), where n = sizeof(dest)
+ * This is basically the old fit.c(copy_max) function
+ */
+char *
+safe_strncpy(char *d, const char *s, size_t n)
+{
+    char *ret;
+
+    ret = strncpy(d, s, n);
+    if (strlen(s) >= n)
+	d[n > 0 ? n - 1 : 0] = NUL;
+
+    return ret;
+}
+
+#ifndef HAVE_STRCSPN
+/*
+ * our own substitute for strcspn()
+ * return the length of the inital segment of str1
+ * consisting of characters not in str2
+ * returns strlen(str1) if none of the characters
+ * from str2 are in str1
+ * based in misc.c(instring) */
+size_t
+gp_strcspn(const char *str1, const char *str2)
+{
+    char *s;
+    size_t pos;
+
+    if (!str1 || !str2)
+	return 0;
+    pos = strlen(str1);
+    while (*str2++)
+	if (s = strchr(str1, *str2))
+	    if ((s - str1) < pos)
+		pos = s - str1;
+    return (pos);
+}
+#endif /* !HAVE_STRCSPN */
+
+double
+gp_strtod(const char *str, char **endptr)
+{
+#if (0)  /* replace with test for platforms with broken strtod() */
+    int used;
+    double d;
+    int n = sscanf(str, "%lf%n", &d, &used);
+    if (n < 1)
+	*endptr = (char *)str;
+    else
+	*endptr = (char *)(str + used);
+    return d;
+#else
+    return strtod(str,endptr);
+#endif
+}
+
+/* Implement portable generation of a NaN value. */
+/* NB: Supposedly DJGPP V2.04 can use atof("NaN"), but... */
+
+double
+not_a_number(void)
+{
+#if defined (__MSC__) || defined (DJGPP) || defined(__DJGPP__) || defined(__MINGW32__)
+	unsigned long lnan[2]={0xffffffff, 0x7fffffff};
+    return *( double* )lnan;
+#else
+	return atof("NaN");
+#endif
+}
+
+
+/* Version of basename, which does take two possible
+   separators into account and does not modify its
+   argument.
+*/
+char * gp_basename(char *path)
+{
+    char * basename = strrchr(path, DIRSEP1);
+    if (basename) {
+        basename++;
+        return basename;
+    }
+#if DIRSEP2 != NUL
+    basename = strrchr(path, DIRSEP2);
+    if (basename) {
+        basename++;
+        return basename;
+    }
+#endif
+    /* no path separator found */
+    return path;
+}
+
+
+#if !defined(HAVE_DIRENT_H) && defined(WIN32)  && (!defined(__WATCOMC__))
+/* BM: OpenWatcom has dirent functions in direct.h!*/
+/*
+
+    Implementation of POSIX directory browsing functions and types for Win32.
+
+    Author:  Kevlin Henney (kevlin@acm.org, kevlin@curbralan.com)
+    History: Created March 1997. Updated June 2003.
+    Rights:  See end of section.
+
+*/
+
+struct DIR
+{
+    long                handle; /* -1 for failed rewind */
+    struct _finddata_t  info;
+    struct dirent       result; /* d_name null iff first time */
+    char                *name;  /* null-terminated char string */
+};
+
+DIR *opendir(const char *name)
+{
+    DIR *dir = 0;
+
+    if (name && name[0]) {
+        size_t base_length = strlen(name);
+         /* search pattern must end with suitable wildcard */
+        const char *all = strchr("/\\", name[base_length - 1]) ? "*" : "/*";
+
+        if ((dir = (DIR *) malloc(sizeof *dir)) != 0 &&
+           (dir->name = (char *) malloc(base_length + strlen(all) + 1)) != 0) {
+            strcat(strcpy(dir->name, name), all);
+
+            if ((dir->handle = (long) _findfirst(dir->name, &dir->info)) != -1) {
+                dir->result.d_name = 0;
+            } else { /* rollback */
+                free(dir->name);
+                free(dir);
+                dir = 0;
+            }
+        } else { /* rollback */
+            free(dir);
+            dir   = 0;
+            errno = ENOMEM;
+        }
+    } else {
+        errno = EINVAL;
+    }
+
+    return dir;
+}
+
+int closedir(DIR *dir)
+{
+    int result = -1;
+
+    if (dir) {
+        if(dir->handle != -1) {
+            result = _findclose(dir->handle);
+        }
+        free(dir->name);
+        free(dir);
+    }
+
+    if (result == -1) { /* map all errors to EBADF */
+        errno = EBADF;
+    }
+
+    return result;
+}
+
+struct dirent *readdir(DIR *dir)
+{
+    struct dirent *result = 0;
+
+    if (dir && dir->handle != -1) {
+        if (!dir->result.d_name || _findnext(dir->handle, &dir->info) != -1) {
+            result         = &dir->result;
+            result->d_name = dir->info.name;
+        }
+    } else {
+        errno = EBADF;
+    }
+
+    return result;
+}
+
+void rewinddir(DIR *dir)
+{
+    if (dir && dir->handle != -1) {
+        _findclose(dir->handle);
+        dir->handle = (long) _findfirst(dir->name, &dir->info);
+        dir->result.d_name = 0;
+    }
+    else {
+        errno = EBADF;
+    }
+}
+
+/*
+
+    Copyright Kevlin Henney, 1997, 2003. All rights reserved.
+
+    Permission to use, copy, modify, and distribute this software and its
+    documentation for any purpose is hereby granted without fee, provided
+    that this copyright and permissions notice appear in all copies and
+    derivatives.
+    
+    This software is supplied "as is" without express or implied warranty.
+
+    But that said, if there are any problems please get in touch.
+
+*/
+#endif /* !HAVE_DIRENT_H && WIN32 */

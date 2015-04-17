@@ -1,0 +1,576 @@
+# Makefile.in for GNUPLOT documentation
+#
+# Note that the master file for generating documentation is gnuplot.doc.
+# See README.
+#
+# To print manual:
+#
+#   For LaTeX
+#       make gnuplot.dvi
+#     or
+#       make pdf
+#	(requires pdflatex)
+#     or
+#	make pdffigures
+#	(requires also graphicx and picins packages) 
+#     or
+#       make ps
+#
+#   For groff (GNU troff}
+#       make grotxt
+#       (print or view gnuplot.txt)
+#     or
+#       make grodvi
+#       (print or view gnuplot.dvi)
+#     or
+#       make grops
+#       (print or view gnuplot.ps)
+#
+#   For nroff
+#     make gnuplot.nroff
+#     (print or view gnuplot.nroff)
+#
+#   For troff
+#     make "TROFF=itroff" troff    (use your troff here)
+#
+#   For GNU info (texinfo)
+#     make info
+#
+
+# default is what is needed for interactive gnuplot
+all: gnuplot.gih
+
+# this tells GNU make not to export variables into the environment
+# But other makes dont understand its significance, so it must
+# not be the first target in the file. So it is here, before
+# any variables are created, but after the default target
+.NOEXPORT:
+
+SHELL = /bin/sh
+
+prefix = /home/jfchen/ProgramC/gnuplot/gnuplot4.6
+exec_prefix = ${prefix}
+bindir = ${exec_prefix}/bin
+datadir = ${datarootdir}
+datarootdir = ${prefix}/share
+infodir = ${datarootdir}/info
+srcdir = .
+top_builddir = ..
+top_srcdir = ..
+
+
+INSTALL = /usr/bin/install -c
+INSTALL_PROGRAM = ${INSTALL}
+INSTALL_DATA = ${INSTALL} -m 644
+NORMAL_INSTALL = :
+PRE_INSTALL = :
+POST_INSTALL = :
+NORMAL_UNINSTALL = :
+PRE_UNINSTALL = :
+POST_UNINSTALL = :
+
+INFO_DEPS = $(srcdir)/gnuplot.info
+
+CC     = gcc
+CPP    = gcc -E
+DEFS   = -DHAVE_CONFIG_H
+DEFAULT_INCLUDES = -I. -I$(srcdir) -I.. -I$(top_builddir)
+CPPFLAGS =   -I/usr/include -I/usr/include/cairo -I/usr/include/pixman-1 -I/usr/include/freetype2 -I/usr/include/libpng12 -I/usr/include/pango-1.0 -I/usr/include/glib-2.0 -I/usr/lib64/glib-2.0/include  
+CFLAGS = -g -O2
+GIHDIR = ${datarootdir}/gnuplot/4.6
+INCLUDES = -I$(top_srcdir)/src -I$(top_srcdir)/term
+LDFLAGS =  -L/usr/lib64
+LIBS = -lm  -lz -lpangocairo-1.0 -lpango-1.0 -lcairo -lgobject-2.0 -lgmodule-2.0 -lglib-2.0  
+
+COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) $(CFLAGS)
+CCLD = $(CC)
+LINK = $(CCLD) $(CFLAGS) $(LDFLAGS) -o $@
+
+.c.o:
+	$(COMPILE) -c $<
+
+# The makeinfo command from GNU texinfo
+MAKEINFO = ${SHELL} /home/jfchen/ProgramC/gnuplot/gnuplot-4.6.0/missing --run makeinfo
+
+# Required for the temporary .info file fix
+EMACS = emacs
+
+# substitute your troff command (and any flags) for this one
+TROFF = troff
+
+# LaTeX command, either latex or latex2e or no
+LATEX = latex
+
+# PlainTeX
+PLAINTEX = tex
+
+# PDFLaTeX command
+PDFLATEX = pdflatex
+
+# substitute your DVI to PostScript conversion program here
+DVIPS = dvips
+
+T = $(top_srcdir)/term/
+CORETERM = $(T)aed.trm $(T)ai.trm $(T)aquaterm.trm $(T)be.trm \
+$(T)cairo.trm $(T)canvas.trm $(T)cgi.trm $(T)cgm.trm $(T)context.trm \
+$(T)corel.trm $(T)debug.trm $(T)djsvga.trm $(T)dumb.trm $(T)dxf.trm \
+$(T)dxy.trm $(T)eepic.trm $(T)emf.trm $(T)emxvga.trm $(T)epson.trm \
+$(T)estimate.trm $(T)excl.trm $(T)fig.trm $(T)gd.trm $(T)ggi.trm \
+$(T)gpic.trm $(T)grass.trm $(T)hp2648.trm $(T)hp26.trm $(T)hp500c.trm \
+$(T)hpgl.trm $(T)hpljii.trm $(T)hppj.trm $(T)imagen.trm $(T)kyo.trm \
+$(T)latex.trm $(T)linux.trm $(T)lua.trm $(T)mac.trm $(T)metafont.trm \
+$(T)metapost.trm $(T)mif.trm $(T)next.trm $(T)openstep.trm $(T)pbm.trm \
+$(T)pdf.trm $(T)pm.trm $(T)post.trm $(T)pslatex.trm \
+$(T)pstricks.trm $(T)qms.trm $(T)qt.trm $(T)regis.trm $(T)sun.trm \
+$(T)svg.trm $(T)t410x.trm $(T)tek.trm $(T)texdraw.trm $(T)tgif.trm \
+$(T)tkcanvas.trm $(T)tpic.trm $(T)v384.trm $(T)vgagl.trm \
+$(T)vws.trm $(T)win.trm $(T)wxt.trm $(T)x11.trm $(T)xlib.trm
+
+DIST_COMMON = README Makefile.in
+
+SOURCES = checkdoc.c doc2gih.c doc2hlp.c doc2ipf.c doc2ms.c doc2rnh.c	\
+doc2rtf.c doc2tex.c windows/doc2html.c termdoc.c xref.c
+
+TERM_H = $(top_srcdir)/src/term.h
+
+BUILT_SOURCES = allterm.h 
+
+HEADERS = doc2x.h xref.h
+
+EXTRA_DIST = doc2texi.el gnuplot.doc gnuplot.texi gpcard.tex	\
+makefile.dst titlepag.ipf titlepag.ms titlepag.tex	\
+toc_entr.sty old psdoc faq-ja.tex gnuplot-ja.doc README.ja	\
+term-ja.diff plotstyles.gnu pdffigures.tex gnuplot.pdf windows
+
+CLEANFILES = doc2tex gnuplot.tex gnuplot.dvi gnuplot.aux gnuplot.log	\
+gnuplot.toc gnuplot.ps gpcard.dvi gpcard.log gpcard.ps alldoc2gih	\
+doc2gih gnuplot.gih doc2hlp gnuplot.hlp gnuplot.idx gnuplot.ilg		\
+gnuplot.ind gnuplot.info* gnuplot.out doc2ipf gnuplot.ipf doc2ms	\
+gnuplot.ms doc2rnh gnuplot.rnh doc2rtf gnuplot.rtf gnuplot.nroff	\
+checkdoc gnuplot.txt gnuplot.tmp VERSION gnuplot.4tc gnuplot.4ct	\
+gnuplot.idv gnuplot.xref gnuplot.lg figure*.pdf pdffigures.*		\
+wxhelp/*.html wxhelp/wgnuplot.htc windows/wgnuplot.htk gnuplot.pdf	\
+gnuplot.htb
+
+DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(EXTRA_DIST)
+
+allterm.h: $(CORETERM)
+	@echo "Building allterm.h"
+	@for e in `egrep "^[ 	]*START_HELP" $(CORETERM) |\
+	     LC_ALL=C sort -f -t':' -k2` ; do \
+	  f=`echo $$e |cut -d\: -f1` ; s=`echo $$e | cut -d\: -f2` ;\
+	  sed -n "/^[ 	]*$$s/,/^[ 	]*END_HELP/p" $$f ; \
+	done >$@
+
+# HBB 20041111: commented out, since it's no longer used.
+#term.h: $(CORETERM)
+#	@echo "Building term.h"
+#	@cat ../config.h $(CORETERM) > term.c
+#	$(CPP) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) -DTERM_DRIVER_H -DTERM_HELP term.c | \
+#	  sed '/^ *$$/d;/^#/d' >$@
+#	@rm -f term.c
+
+# for debugging
+alldoc: check dvi gih hlp html info ipf ms nroff pdffigures ps rnh rtf htb
+
+### [tn]roff documentation
+troff: gnuplot.ms titlepag.ms
+	@if [ "$(srcdir)" = "$(top_builddir)" ] ; then \
+	    tbl gnuplot.ms | eqn | $(TROFF) -ms ; \
+	else \
+	    < gnuplot.ms sed "s,titlepag\.ms,$(srcdir)/titlepag\.ms," |\
+	      tbl | eqn | $(TROFF) -ms ; \
+	fi
+
+nroff: gnuplot.nroff
+
+gnuplot.nroff: gnuplot.ms titlepag.ms
+	@if [ "$(srcdir)" = "$(top_builddir)" ] ; then \
+	    tbl gnuplot.ms | neqn | nroff -ms | col > gnuplot.nroff ; \
+	else \
+	    < gnuplot.ms sed "s,titlepag\.ms,$(srcdir)/titlepag\.ms," |\
+	      tbl | neqn | nroff -ms | col > gnuplot.nroff ; \
+	fi
+
+### groff documentation
+
+groff: grotxt grodvi grops
+
+grotxt: gnuplot.ms titlepag.ms
+	@if [ "$(srcdir)" = "$(top_builddir)" ] ; then \
+	    groff -s -p -t -e -ms -Tlatin1 gnuplot.ms > gnuplot.txt ; \
+	else \
+	    sed "s,titlepag\.ms,$(srcdir)/titlepag\.ms," gnuplot.ms |\
+	      groff -s -p -t -e -ms -Tlatin1 gnuplot.ms > gnuplot.txt ; \
+	fi
+
+grodvi: gnuplot.ms titlepag.ms
+	@if [ "$(srcdir)" = "$(top_builddir)" ] ; then \
+	    groff -s -p -t -e -ms -Tdvi gnuplot.ms > gnuplot.dvi ; \
+	else \
+	    sed "s,titlepag\.ms,$(srcdir)/titlepag\.ms," gnuplot.ms |\
+	      groff -s -p -t -e -ms -Tdvi gnuplot.ms > gnuplot.dvi ; \
+	fi
+
+grops: gnuplot.ms titlepag.ms
+	@if [ "$(srcdir)" = "$(top_builddir)" ] ; then \
+	    groff -s -p -t -e -ms -Tps gnuplot.ms > gnuplot.ps ; \
+	else \
+	    sed "s,titlepag\.ms,$(srcdir)/titlepag\.ms," gnuplot.ms |\
+	      groff -s -p -t -e -ms -Tps gnuplot.ms > gnuplot.ps ; \
+	fi
+
+### doc2xxx dependencies
+ms: gnuplot.ms
+
+gnuplot.ms: doc2ms $(srcdir)/gnuplot.doc
+	./doc2ms $(srcdir)/gnuplot.doc gnuplot.ms
+
+doc2ms: doc2ms.o termdoc.o
+	$(LINK) doc2ms.o termdoc.o $(LIBS)
+
+doc2ms.o: doc2ms.c $(BUILT_SOURCES)
+	$(COMPILE) -DALL_TERM_DOC -c $(srcdir)/doc2ms.c
+
+### html
+html: htmldocs/gnuplot.html
+
+# requires makeinfo (GNU texinfo) 4.0 or better
+# htmldocs/gnuplot.html: $(srcdir)/gnuplot.texi 
+#	$(MAKEINFO) --html -I$(srcdir) $(srcdir)/gnuplot.texi --no-split --output=$@
+
+# requires a working latex2html, which is hard to find these days
+# htmldocs/gnuplot.html: $(srcdir)/gnuplot.tex
+#	mkdir -p htmldocs
+#	latex2html -dir htmldocs -local_icons gnuplot
+
+htmldocs/gnuplot.html: $(srcdir)/gnuplot.dvi
+	rm -f VERSION; ln -s ../VERSION .
+	htlatex gnuplot
+	mkdir -p htmldocs
+	mv gnuplot.html gnuplot.css gnuplot*.png gnuplot.log htmldocs/
+
+### PDF documentation
+pdffigures: pdffigures.tex
+
+pdffigures.tex:	figures gnuplot.pdf
+	rm -f gnuplot.tex
+	echo "" > pdffigures.tex
+
+figures: doc2tex
+	GNUPLOT_LIB=$(top_srcdir)/demo ../src/gnuplot $(srcdir)/plotstyles.gnu
+	./doc2tex -figures $(srcdir)/gnuplot.doc gnuplot.tex
+	echo "\usepackage{graphicx}" > pdffigures.tex
+	echo "\usepackage{picins}" >> pdffigures.tex
+
+pdf: gnuplot.pdf
+
+gnuplot.pdf: gnuplot.tex
+	@if test $(PDFLATEX) != no ; then \
+	  rm -f gnuplot.idx ; \
+	  touch gnuplot.idx ; \
+	  TEXINPUTS=.:$(srcdir):$(top_srcdir):${TEXINPUTS}: $(PDFLATEX) gnuplot ; \
+	  TEXINPUTS=.:$(srcdir):$(top_srcdir):${TEXINPUTS}: $(PDFLATEX) gnuplot ; \
+	  TEXINPUTS=.:$(srcdir):$(top_srcdir):${TEXINPUTS}: $(PDFLATEX) gnuplot ; \
+	  makeindex gnuplot ; \
+	  TEXINPUTS=.:$(srcdir):$(top_srcdir):${TEXINPUTS}: $(PDFLATEX) gnuplot ; \
+	else \
+	  echo pdflatex not found - cannot build pdf file ; \
+	fi
+
+### LaTeX documentation
+tex: gnuplot.tex
+
+gnuplot.tex: doc2tex $(srcdir)/gnuplot.doc
+	./doc2tex $(srcdir)/gnuplot.doc gnuplot.tex
+
+doc2tex: doc2tex.o termdoc.o
+	$(LINK) doc2tex.o termdoc.o $(LIBS)
+
+doc2tex.o: doc2tex.c $(BUILT_SOURCES)
+	$(COMPILE) -DALL_TERM_DOC -c $(srcdir)/doc2tex.c
+
+# this is how to make DVI files
+dvi: gnuplot.dvi gpcard.dvi
+
+gnuplot.dvi: gnuplot.tex titlepag.tex toc_entr.sty
+	@if test $(LATEX) != no ; then \
+	  rm -f gnuplot.idx ; \
+	  touch gnuplot.idx ; \
+	  TEXINPUTS=.:$(srcdir):$(top_srcdir):${TEXINPUTS}: $(LATEX) gnuplot ; \
+	  TEXINPUTS=.:$(srcdir):$(top_srcdir):${TEXINPUTS}: $(LATEX) gnuplot ; \
+	  TEXINPUTS=.:$(srcdir):$(top_srcdir):${TEXINPUTS}: $(LATEX) gnuplot ; \
+	  makeindex gnuplot ; \
+	  TEXINPUTS=.:$(srcdir):$(top_srcdir):${TEXINPUTS}: $(LATEX) gnuplot ; \
+	else \
+	  echo "latex not found - cannot build dvi file" ; \
+	fi
+
+gpcard.dvi: gpcard.tex
+	@if test $(PLAINTEX) != no ; then \
+              TEXINPUTS=.:$(srcdir):$(top_srcdir): tex gpcard ; \
+	else \
+	  echo "plaintex not found - cannot build dvi file" ; \
+	fi
+
+### Postscript format
+# if pslatex has been installed, add "times" to titlepage.tex
+ps: gnuplot.ps gpcard.ps
+
+gnuplot.ps: gnuplot.dvi
+	@if test $(DVIPS) != no ; then \
+	   $(DVIPS) gnuplot.dvi -o gnuplot.ps ; \
+	else \
+	   echo "dvips not found - cannot build PS file" ; \
+	fi
+
+gpcard.ps: gpcard.dvi
+	@if test $(DVIPS) != no ; then \
+            $(DVIPS) gpcard.dvi -o gpcard.ps ; \
+	else \
+	   echo "dvips not found - cannot build PS file" ; \
+	fi
+
+
+# this is how to make gnuplot.hlp
+hlp: gnuplot.hlp
+
+gnuplot.hlp: doc2hlp $(srcdir)/gnuplot.doc
+	./doc2hlp $(srcdir)/gnuplot.doc gnuplot.hlp
+
+doc2hlp: doc2hlp.o termdoc.o
+	$(LINK) doc2hlp.o termdoc.o $(LIBS)
+
+### gnuplot interactive help format
+gih: gnuplot.gih
+
+gnuplot.gih: doc2gih $(srcdir)/gnuplot.doc
+	@rm -f alldoc2gih
+	./doc2gih $(srcdir)/gnuplot.doc gnuplot.gih
+
+doc2gih: doc2gih.o termdoc.o
+	$(LINK) doc2gih.o termdoc.o $(LIBS)
+
+# To include all terminals in the .gih file
+allgih: alldoc2gih $(srcdir)/gnuplot.doc
+	@rm -f doc2gih
+	./alldoc2gih $(srcdir)/gnuplot.doc gnuplot.gih
+
+alldoc2gih: alldoc2gih.o termdoc.o
+	$(LINK) alldoc2gih.o termdoc.o $(LIBS)
+
+alldoc2gih.o: doc2gih.c $(BUILT_SOURCES)
+	$(COMPILE) -DALL_TERM_DOC -c $(srcdir)/doc2gih.c
+	@mv doc2gih.o alldoc2gih.o
+
+### wxhelp format
+htb: gnuplot.htb
+
+gnuplot.htb: wxhelp/wgnuplot.html
+	GNUPLOT_LIB=$(srcdir)/../demo ../src/gnuplot -e "winhelp=1;" $(srcdir)/plotstyles.gnu
+	zip -j9 gnuplot.htb windows/wgnuplot.hhp wxhelp/wgnuplot.hhc wxhelp/wgnuplot.hhk wxhelp/*.html windows/*.png
+
+wxhelp/wgnuplot.html: wxhelp/doc2html $(srcdir)/gnuplot.doc 
+	./wxhelp/doc2html $(srcdir)/gnuplot.doc wxhelp/
+
+wxhelp/doc2html.o: $(srcdir)/windows/doc2html.c $(BUILT_SOURCES)
+	[ -d wxhelp ] || mkdir wxhelp
+	$(COMPILE) -c -o $@ -I.. -DALL_TERM_DOC -DWXHELP $<
+
+wxhelp/doc2html: wxhelp/doc2html.o termdoc.o xref.o ../src/version.o
+	$(LINK) $^
+
+### GNU info format
+info: gnuplot.info
+
+gnuplot.info: $(srcdir)/gnuplot.texi
+	$(MAKEINFO) -I$(srcdir) $(srcdir)/gnuplot.texi --no-split --output=$@
+
+# Thanks to Bruce Ravel for doc2texi.el!
+$(srcdir)/gnuplot.texi: $(srcdir)/doc2texi.el $(srcdir)/gnuplot.doc
+	@echo "Creating texinfo"
+	@if test "$(EMACS)" != no; then \
+	   cd $(srcdir) ;  \
+	   $(EMACS) -batch -l doc2texi.el -f d2t-doc-to-texi ; \
+	else \
+	   echo "No emacs found - cannot create texinfo file" ; \
+	fi
+
+# this is how to make OS/2 ipfc documentation
+ipf: gnuplot.ipf
+
+gnuplot.ipf: doc2ipf $(srcdir)/gnuplot.doc
+	./doc2ipf $(srcdir)/gnuplot.doc gnuplot.ipf
+
+doc2ipf: doc2ipf.o termdoc.o xref.o
+	$(LINK) doc2ipf.o termdoc.o xref.o $(LIBS)
+
+### Rich Text Format
+rtf: gnuplot.rtf
+
+gnuplot.rtf: doc2rtf $(srcdir)/gnuplot.doc
+	./doc2rtf $(srcdir)/gnuplot.doc gnuplot.rtf
+
+doc2rtf: doc2rtf.o termdoc.o xref.o
+	$(LINK) doc2rtf.o termdoc.o xref.o $(LIBS)
+
+# this is how to make rnh documentation (VMS help format)
+rnh: gnuplot.rnh
+
+gnuplot.rnh: doc2rnh $(srcdir)/gnuplot.doc
+	./doc2rnh $(srcdir)/gnuplot.doc gnuplot.rnh
+
+doc2rnh: doc2rnh.o termdoc.o
+	$(LINK) doc2rnh.o termdoc.o $(LIBS)
+
+# this is how to check the gnuplot.doc file
+check: all checkdoc
+	@./checkdoc < $(srcdir)/gnuplot.doc; \
+	if test $$? -eq 0; then \
+	  echo "PASS: gnuplot.doc"; \
+	else \
+	  :; \
+	fi
+
+checkdoc: checkdoc.o termdoc.o $(srcdir)/gnuplot.doc
+	$(LINK) checkdoc.o termdoc.o $(LIBS)
+
+checkdoc.o: checkdoc.c $(BUILT_SOURCES)
+	$(COMPILE) -DALL_TERM_DOC -c $(srcdir)/checkdoc.c
+
+# install section
+install: install-gih install-info install-pdf
+
+install-gih: gnuplot.gih
+	$(top_srcdir)/mkinstalldirs $(DESTDIR)$(GIHDIR)
+	$(INSTALL_DATA) gnuplot.gih $(DESTDIR)$(GIHDIR)/gnuplot.gih
+
+install-pdf:
+	$(top_srcdir)/mkinstalldirs $(DESTDIR)$(GIHDIR)
+	if test -f gnuplot.pdf ; then \
+	    $(INSTALL_DATA) gnuplot.pdf $(DESTDIR)$(GIHDIR)/gnuplot.pdf; \
+	fi
+
+install-info: gnuplot.info
+	$(top_srcdir)/mkinstalldirs $(DESTDIR)$(infodir)
+	$(INSTALL_DATA) gnuplot.info $(DESTDIR)$(infodir)/gnuplot.info
+	@if (install-info --version && \
+	     install-info --version | fgrep -i -v debian) >/dev/null 2>&1; then \
+	  echo "install-info --info-dir=$(DESTDIR)$(infodir) $(DESTDIR)$(infodir)/gnuplot.info";\
+	  install-info --info-dir=$(DESTDIR)$(infodir) $(DESTDIR)$(infodir)/gnuplot.info || :;\
+	else : ; fi
+
+installcheck:
+
+install-exec:
+
+# uninstall section
+uninstall: uninstall-gih uninstall-info uninstall-pdf
+
+uninstall-gih:
+	rm -f $(DESTDIR)$(GIHDIR)/gnuplot.gih
+
+uninstall-pdf:
+	rm -f $(DESTDIR)$(GIHDIR)/gnuplot.pdf
+
+uninstall-info:
+	$(PRE_UNINSTALL)
+	@if (install-info --version && \
+	     install-info --version 2>&1 | sed 1q | grep -i -v debian) >/dev/null 2>&1; then \
+	  list='$(INFO_DEPS)'; \
+	  for file in $$list; do \
+	    relfile=`echo "$$file" | sed 's|^.*/||'`; \
+	    echo " install-info --info-dir=$(DESTDIR)$(infodir) --remove $(DESTDIR)$(infodir)/$$relfile"; \
+	    install-info --info-dir=$(DESTDIR)$(infodir) --remove $(DESTDIR)$(infodir)/$$relfile; \
+	  done; \
+	else :; fi
+	@$(NORMAL_UNINSTALL)
+	@list='$(INFO_DEPS)'; \
+	for file in $$list; do \
+	  relfile=`echo "$$file" | sed 's|^.*/||'`; \
+	  relfile_i=`echo "$$relfile" | sed 's|\.info$$||;s|$$|.i|'`; \
+	  (if cd $(DESTDIR)$(infodir); then \
+	     echo " rm -f $$relfile $$relfile-[0-9] $$relfile-[0-9][0-9] $$relfile_i[0-9] $$relfile_i[0-9][0-9])"; \
+	     rm -f $$relfile $$relfile-[0-9] $$relfile-[0-9][0-9] $$relfile_i[0-9] $$relfile_i[0-9][0-9]; \
+	   else :; fi); \
+	done
+
+# for VMS only
+install-vms: gnuplot.hlp
+	$(INSTALL_DATA) gnuplot.hlp $(datadir)/gnuplot.hlp
+
+distdir = $(top_builddir)/$(PACKAGE)-$(VERSION)/$(subdir)
+
+subdir = docs
+
+
+distdir: $(DISTFILES)
+	distdir=`cd $(distdir) && pwd`
+	@for file in $(DISTFILES); do \
+	  d=$(srcdir); \
+	  if test -d $$d/$$file; then \
+	    cp -pr $$d/$$file $(distdir)/$$file; \
+	  else \
+	    test -f $(distdir)/$$file \
+	    || ln $$d/$$file $(distdir)/$$file 2> /dev/null \
+	    || cp -p $$d/$$file $(distdir)/$$file || :; \
+	  fi; \
+	done
+
+clean-local:
+	@test "$(top_srcdir)" = "$(top_builddir)" || rm -f gnuplot.texi
+
+clean-generic:
+	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
+	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
+	-test -d htmldocs && rm -rf htmldocs
+
+clean-compile:
+	rm -f *.o core *.core
+
+clean: clean-local clean-generic clean-compile
+	-rm -f *.exe *~
+
+mostlyclean: clean
+
+distclean: clean
+	-rm -f Makefile
+
+realclean: distclean
+	-rm -f TAGS
+
+Makefile: Makefile.in ../config.status
+	cd .. \
+	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
+
+### Dependencies - do not edit!
+
+# all doc2somethings depend on termdoc and either ../term.h or
+# allterm.h, maybe this would be better as separate object file
+# (but then we have to change all the other makefiles). Plus then
+# we cannot make some doc2* filters use allterm.h and others use term.h
+
+checkdoc.o: checkdoc.c ../config.h $(top_srcdir)/src/syscfg.h \
+		$(top_srcdir)/src/stdfn.h doc2x.h allterm.h
+alldoc2gih.o: doc2gih.c ../config.h $(top_srcdir)/src/syscfg.h \
+		$(top_srcdir)/src/stdfn.h doc2x.h allterm.h
+doc2gih.o: doc2gih.c ../config.h $(top_srcdir)/src/syscfg.h \
+		$(top_srcdir)/src/stdfn.h doc2x.h $(TERM_H)
+doc2hlp.o: doc2hlp.c ../config.h $(top_srcdir)/src/syscfg.h \
+		$(top_srcdir)/src/stdfn.h doc2x.h $(TERM_H)
+doc2ipf.o: doc2ipf.c ../config.h $(top_srcdir)/src/syscfg.h \
+		$(top_srcdir)/src/stdfn.h doc2x.h $(TERM_H)
+doc2ms.o: doc2ms.c ../config.h $(top_srcdir)/src/syscfg.h \
+		$(top_srcdir)/src/stdfn.h doc2x.h allterm.h
+doc2rnh.o: doc2rnh.c ../config.h $(top_srcdir)/src/syscfg.h \
+		$(top_srcdir)/src/stdfn.h doc2x.h $(TERM_H)
+doc2rtf.o: doc2rtf.c ../config.h $(top_srcdir)/src/syscfg.h \
+		$(top_srcdir)/src/stdfn.h doc2x.h $(TERM_H)
+doc2tex.o: doc2tex.c ../config.h $(top_srcdir)/src/syscfg.h \
+		$(top_srcdir)/src/stdfn.h doc2x.h allterm.h
+termdoc.o: termdoc.c ../config.h $(top_srcdir)/src/syscfg.h \
+		$(top_srcdir)/src/stdfn.h doc2x.h
+xref.o: xref.c ../config.h $(top_srcdir)/src/syscfg.h \
+		$(top_srcdir)/src/stdfn.h doc2x.h xref.h
+
+#the end

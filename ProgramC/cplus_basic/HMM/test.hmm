@@ -1,0 +1,14 @@
+M: observation
+1 2
+N: hidden stage
+1 2 3
+A: transition matrix
+0.333 0.333 0.333
+0.333 0.333 0.333
+0.333 0.333 0.333
+B: emmision matrix
+0.5   0.5  
+0.75  0.25
+0.25  0.75
+pi: initial probability
+0.333 0.333 0.333

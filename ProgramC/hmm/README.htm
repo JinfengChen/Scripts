@@ -1,0 +1,270 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<title>HMM</title>
+</head>
+
+<body>
+
+<h2><a href="hmm.tgz">A C++ Implementation of Hidden Markov Model&nbsp;</a></h2>
+<p>Copyright (C) 2003 Dekang Lin, lindek@cs.ualberta.ca<br>
+<br>
+Permission to use, copy, modify, and distribute this software for any purpose is hereby granted without fee, provided that the above
+copyright notice appear in all copies and that both that copyright notice and this permission notice appear in supporting documentation.
+No representations about the suitability of this software for any purpose is made. It is provided "as is" without express or implied
+warranty.</p>
+<p> The package contains three executables:</p>
+<table border="1" cellspacing="1" width="97%">
+  <tr>
+    <td width="15%"><b>Executable</b></td>
+    <td width="85%"><b>Purpose</b></td>
+  </tr>
+  <tr>
+    <td width="15%" valign="top"><font face="Courier New">vit</font></td>
+    <td width="85%" valign="top"> Given an HMM and an observation
+    sequence, compute the sequence of the hidden states that has the highest
+    probability using the Viterbi algorithm.</td>
+  </tr>
+  <tr>
+    <td width="15%" valign="top"><font face="Courier New">genseq</font></td>
+    <td width="85%" valign="top"> Generate an observation sequence
+    using a HMM model.</td>
+  </tr>
+  <tr>
+    <td width="15%" valign="top"><font face="Courier New">trainhmm</font></td>
+    <td width="85%" valign="top"> Using a collection of
+    observation sequences to train a HMM model using the Baum-Welch algorithm.</td>
+  </tr>
+</table>
+<p>The three executables share the same implementation of HMM in <font face="Courier New">hmm.h</font>
+and <font face="Courier New">hmm.cpp</font>. The executables can be computed by
+typing the <font face="Courier New">make</font> command in the <font face="Courier New">hmm</font>
+directory.</p>
+<p>A HMM is specified in two files: <font face="Courier New">NAME.trans</font>
+and <font face="Courier New">NAME.emit</font> where <font face="Courier New">NAME</font>
+is the name of the HMM. The file <font face="Courier New">NAME.trans</font>
+contains the transition probabilities between the states. The file <font face="Courier New">NAME.emit</font>
+contains the emission probabilities. Normally, HMM also needs a set of initial
+probabilities of the states. We treat them as part of the transition
+probabilities by adding a special initial state. The transition probabilities from
+the special initial state to other states correspond to the initial
+probabilities of states.&nbsp;</p>
+<p align="center"><img border="0" src="as4.ht1.gif" width="367" height="229"></p>
+<p>Consider the above HMM (from Russell and Norvig's AI textbook). Its
+transition and emission probabilities are specified in the files <font face="Courier New">phone.trans</font>
+and&nbsp; <font face="Courier New">phone.emit</font> in the <font face="Courier New">phone</font>
+directory as follows:</p>
+<p><font face="Courier New">phone.trans:</font></p>
+<blockquote>
+  <pre>INIT
+INIT    Onset   1
+Onset   Onset   0.3
+Onset   Mid     0.7
+Mid     Mid     0.9
+Mid     End     0.1
+End     End     0.4
+End     FINAL   0.6</pre>
+</blockquote>
+<p><font face="Courier New">phone.emit:</font></p>
+<blockquote>
+  <pre>Onset   C1      0.5
+Onset   C2      0.2
+Onset   C3      0.3
+Mid     C3      0.2
+Mid     C4      0.7
+Mid     C5      0.1
+End     C4      0.1
+End     C6      0.5
+End     C7      0.4</pre>
+</blockquote>
+<p>The first line of the <font face="Courier New">phone.trans</font> file is the name
+of the initial state. Each of the subsequent lines is a transition probability.
+For example, <font face="Courier New">P(Mid|Onset)=0.7</font>, <font face="Courier New">P(C4|End)=0.1</font>.
+The transition and emission probabilities not listed in these two files
+are treated as zeros.</p>
+<p>The <font face="Courier New">vit</font> program takes the name of a HMM as
+the command-line argument. It then reads sequences of observations from the
+standard input and prints the most probable sequences of states as well as their
+probability on the standard output. For example, the file <font face="Courier New">phone.input</font>
+contains the observation sequence:</p>
+<blockquote>
+  <pre>C1 C2 C3 C4 C4 C6 C7
+C2 C2 C5 C4 C4 C6 C6</pre>
+</blockquote>
+<p>The results of issuing the following command in the <font face="Courier New">phone</font>
+directory:<font face="Courier New"><br>
+&nbsp;&nbsp;&nbsp; ../src/vit phone &lt; phone.input<br>
+</font>are the following:</p>
+<blockquote>
+  <pre>P(path)=0.625286
+path:
+C1      Onset
+C2      Onset
+C3      Mid
+C4      Mid
+C4      Mid
+C6      End
+C7      End
+P(path)=0.936748
+path:
+C2      Onset
+C2      Onset
+C5      Mid
+C4      Mid
+C4      Mid
+C6      End
+C6      End</pre>
+</blockquote>
+<p>The <font face="Courier New">genseq</font> program takes two parameters. The
+first is the name of a HMM (i.e., <font face="Courier New">NAME.trans</font> and
+<font face="Courier New">NAME.emit</font> specifies the transition and emission
+probabilities of the HMM). The second is the number of sequences to generate.
+The program generates a collection of observation sequences with each sequence
+on a line. For example, the outputs of the command<br>
+&nbsp;&nbsp;&nbsp;&nbsp; <font face="Courier New">../src/genseq phone 10</font>
+&nbsp;<br>
+are:</p>
+<blockquote>
+  <pre>C1 C4 C6 C7 C6
+C1 C5 C7
+C2 C1 C3 C1 C1 C4 C4 C4 C4 C5 C4 C4 C4 C4 C5 C5 C3 C4 C4 C3 C3 C5 C7 C6 C7
+C2 C1 C5 C4 C4 C4 C4 C4 C4 C4 C5 C4 C4 C6
+C3 C4 C7 C7
+C2 C3 C4 C3 C4 C3 C6 C6
+C3 C4 C4 C4 C4 C4 C4 C4 C5 C4 C4 C4 C5 C4 C3 C3 C4 C4 C4 C3 C6
+C3 C3 C1 C4 C3 C5 C4 C4 C4 C4 C4 C6
+C2 C3 C5 C4 C7
+C2 C3 C4 C4 C4 C4 C4 C3 C4 C4 C6</pre>
+</blockquote>
+<p>One of the beauties of HMM is that the parameters it needs can be estimated
+(trained) with sequences of observations. The <font face="Courier New">trainhmm</font>
+program does exactly this. It takes three obligatory parameters and one optional
+parameter. The three obligatory parameters are: the name of the initial HMM, the
+name of the result HMM and the file containing the training sequences. The
+optional parameter is the maximum number iterations to run during training. If
+the fourth parameter is not provided, the maximum number of iterations is 10.
+For example, the command:<font face="Courier New"><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ../src/trainhmm phone-init1 phone-result1 phone.train</font>&nbsp;<br>
+ will train a HMM with the starting parameters in
+the files <font face="Courier New">phone-init1.trans</font> and <font face="Courier New">phone-init1.emit</font>
+which contain the following contents:</p>
+<p><font face="Courier New">phone-init1.trans:</font></p>
+<blockquote>
+  <pre>INIT
+INIT    Onset   1
+Onset   Onset   0.5
+Onset   Mid     0.5
+Mid     Mid     0.5
+Mid     End     0.5
+End     End     0.5
+End     FINAL   0.5</pre>
+</blockquote>
+<p><font face="Courier New">phone-init1.emit:</font></p>
+<blockquote>
+  <pre>Onset   C1      0.33
+Onset   C2      0.33
+Onset   C3      0.33
+Mid     C3      0.33
+Mid     C4      0.33
+Mid     C5      0.33
+End     C4      0.33
+End     C6      0.33
+End     C7      0.33</pre>
+</blockquote>
+
+By default, the <font face="Courier New">trainhmm</font> command runs up to 10
+iterations. This can be changed by providing the program the the fourth
+parameter.
+<p>
+
+Although the transitions in <font face="Courier New">phone-init1.trans</font>
+    have different probabilities than the model that generated the data, the
+    transition diagram would have the same structure as the model. Now, suppose
+    we do not know the structure of the transition diagram. We would have to
+    assume any state (including FINAL, but excluding INIT) can follow any other
+    state with equal probability. The transition probabilities will be as
+specified in <font face="Courier New">phone-init2.trans</font>. Suppose <font face="Courier New">phone-init2.emit</font>
+is identical to <font face="Courier New">phone-init1.emit</font>. The results <font face="Courier New">trainhmm</font> program with <font face="Courier New">phone-init2</font>
+ show that the Baum-Welch algorithm can still learn the correct HMM.&nbsp;&nbsp;</p>
+<p>To make the learning problem even harder, if you change the initial
+    emission probability table so that any state (including FINAL, but excluding
+    INIT) can generate any symbol with equal probability (see <font face="Courier New">phone-init3.*</font>),
+the Baum-Welch will not be able to learn the correct model. 
+<p>The <font face="Courier New"> pos</font> directory contains a part of speech tagger trained with
+about 41K sentences from the Wall Street Journal (the corpus is not included for
+copyright reasons). The initial transition probability table allow any state
+(POS) to follow any other state with equal probability. The initial emission
+probability table is based on the lexicon in <a href="http://www.ai.mit.edu/people/mcollins/">Michael
+Collins</a>' parser. We assume that all emissions allowed in the lexicon have
+equal probability. The format of the training corpus should be the same as the
+file <font face="Courier New">sample.txt:</font> each line corresponds to a
+sentence. The tokens are space separated.
+</p>
+
+<p> The files <font face="Courier New"> pos.trans</font> and <font face="Courier New"> pos.emit</font> are
+transition and emission probability tables obtained with the 41K sentence
+corpus.
+One can use the Viterbi algorithm to perform POS tagging with this model. For
+example, the command<br>
+&nbsp;&nbsp; <font face="Courier New"> ../src/vit pos &lt;sample.txt</font><br>
+generates the following outputs:
+</p>
+
+<blockquote>
+  <pre>P(path)=0.443872
+path: 
+But	CC
+state	NN
+courts	NNS
+upheld	VBD
+a	DT
+challenge	NN
+by	RP
+consumer	NN
+groups	NNS
+to	TO
+the	DT
+commission	NN
+'s	POS
+rate	NN
+increase	NN
+and	CC
+found	VBD
+the	DT
+rates	NNS
+illegal	JJ
+.	.
+P(path)=0.580858
+path: 
+The	DT
+Illinois	NNP
+Supreme	NNP
+Court	NNP
+ordered	VBD
+the	DT
+commission	NN
+to	TO
+audit	VB
+Commonwealth	NNP
+Edison	NNP
+'s	POS
+construction	NN
+expenses	NNS
+and	CC
+refund	VB
+any	DT
+unreasonable	JJ
+expenses	NNS
+.	.</pre>
+
+</blockquote>
+<p>&nbsp;
+</p>
+
+</body>
+
+</html>

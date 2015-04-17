@@ -1,0 +1,21 @@
+INIT
+INIT	Onset	1
+Onset	Onset	0.25
+Onset	Mid	0.25
+Onset	End	0.25
+Onset	FINAL	0.25
+Mid	Onset	0.25
+Mid	Mid	0.25
+Mid	End	0.25
+Mid	FINAL	0.25
+End	Onset	0.25
+End	Mid	0.25
+End	End	0.25
+End	FINAL	0.25
+FINAL	Onset	0.25
+FINAL	Mid	0.25
+FINAL	End	0.25
+FINAL	FINAL	0.25
+
+
+	

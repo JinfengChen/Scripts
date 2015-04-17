@@ -1,0 +1,11 @@
+INIT
+INIT	Onset	1
+Onset	Onset	0.3
+Onset	Mid	0.7
+Mid	Mid	0.9
+Mid	End	0.1
+End	End	0.4
+End	FINAL	0.6
+
+
+	

@@ -1,0 +1,10 @@
+version.o: version.c version.h syscfg.h ../config.h \
+ /usr/lib/gcc/x86_64-redhat-linux/4.4.6/include/stdbool.h
+
+version.h:
+
+syscfg.h:
+
+../config.h:
+
+/usr/lib/gcc/x86_64-redhat-linux/4.4.6/include/stdbool.h:

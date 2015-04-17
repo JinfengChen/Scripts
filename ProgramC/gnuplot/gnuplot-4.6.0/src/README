@@ -1,0 +1,1115 @@
+*******************************************************************************
+*******************************************************************************
+
+This file documents shortly some parts of the gnuplot internals.
+
+TABLE OF CONTENTS:
+
+  * OVERVIEW OVER CODE STRUCTURE CHANGES AFTER MERGING THE 'AXES' BRANCH
+  * TECHNICAL DETAILS FOR MOUSE COMMUNICATION
+  * TECHNICAL DETAILS FOR FAST MOUSE ROTATION OF 3D SURFACES
+  * TECHNICAL DETAILS ABOUT PM3D
+
+Document version: "$Id: README,v 1.9 2007/01/17 18:11:40 sfeam Exp $"
+
+
+*******************************************************************************
+*******************************************************************************
+
+
+OVERVIEW OVER CODE STRUCTURE CHANGES AFTER MERGING THE 'AXES' BRANCH
+====================================================================
+
+
+CODE structure changes --- an overview: 
+  - this is important info if you want to work on gnuplot or merge in patches,
+  - made against gnuplot versions before 3.8e.
+
+As of November 1st, 2000, a large set of reorganizational changes to
+the gnuplot source code, formerly known as 'the axis branch', were
+folded into the main source tree. This was tagged as beta version 3.8e
+of the program. Due to the massive amount of changes, this will likely
+break most patches built against any previous version of gnuplot. To
+help others in resolving the conflicts that arise, I've set up this
+description.
+
+The change that is most likely to break your patches is that many
+variables formerly in setshow.h were renamed and grouped into an array
+of structures.  All status that is set/saved for each individual axis
+got moved. A little overview:
+
+  autoscale_*		--> axis_array[].autoscale
+  *format		--> [].formatstring
+  format_is_numeric[*]  --> [].format_is_numeric
+  is_log_*		--> [].log
+  base_log_*		--> [].base
+  log_base_log_*	--> [].log_base
+  *label		--> [].label
+  *min			--> [].set_min
+  *max			--> [].set_max
+  min_array[]		--> [].min
+  max_array[]		--> [].max
+  writeback_min[]	--> [].writeback_min
+  writeback_max[]	--> [].writeback_max
+  *zeroaxis		--> [].zeroaxis
+  *tics			--> [].ticmode
+  rotate_*tics		--> [].tic_rotate
+  m*tics		--> [].minitics
+  m*tfreq		--> [].mtic_freq
+  *ticdef		--> [].ticdef
+  timefmt		--> [].timefmt    --- one per axis, now!
+  datatype[]		--> [].is_timedata
+
+Other, general changes: 
+
+1) All status variables for features that have an axis name
+   in 'set' are now contained in axis.c, and declared
+   in axis.h. Some internal status variables also were moved there.
+2) plot.h is no longer the 'master include file'. The big collection of
+   type definitions is now in a new file 'gp_types.h'. Only relatively
+   few sources will now want to #include "plot.h", but most will need
+   "gp_types.h". It's often indirectly pulled in through other headers.
+3) setshow.h now only declares variables that *do* belong to set.c and
+   show.c. All the global status variables are now kept in their
+   respective implementation modules.
+4) Global variables are now all declared in the .h file of their 'home'
+   module (i.e. if the definition is in foo.c, the decl is in foo.h). 
+5) Frequently repeated code blocks, like log()/pow() conversion of
+   values for log axes, are now macros in axis.h or functions in
+   the axis module.
+6) reset_command() moved from set.c to unset.c
+7) Many status variables and implementations for graphical plot elements
+   that are not axis-specific (the timestamp, the key, the border, and
+   some others) are now in the new source module 'gadgets.h'.
+8) there's a header file 'version.h' now for the stuff exported by
+   'version.c'. 
+9) Variables and functions only used by one particular source file
+    have been moved into that and made 'static', to improve mutual
+    isolation of the individual source modules.
+10) Series of #defines that represent different cases have been turned
+    into enums. This makes for easier debugging, and better compiler
+    warnings if you forget to handle some case.
+11) Default/initial values of variables to be influenced by 'reset'
+    usually have a #define in the .h that is used for both, to avoid
+    'reset' and the initialization getting out of synch.
+12) Types not needed outside a certain module are defined in the source,
+    where no other modules sees them, rather than in the header.
+13) If an int was used as a yes/no flag, only, I made it a TBOOLEAN.
+
+
+
+
+Details, by file:
+=================
+
+now in axis.c/h:(new)
+  type axis
+  enum AXIS_INDEX
+  AXIS_ARRAY_SIZE
+  t_ticseries_type
+  types ticmark, ticdef, en_minitics_status, tic_callback, AXIS_DEFAULTS
+  DEFAULT_AXIS_STRUCT
+  axis_array[]    --- what it all started about
+  axis_defaults[] 
+  INIT_AXIS_ARRAY() --- set a field a given initial value, for all axes
+  axisname_tbl[] --- for parsing
+  ticscale, miniticscale, tic_in --- tic-related variables
+  default_axis_ticdef, default_axis_label --- for unset/reset
+  default_axis_zeroaxis, default_grid_lp --- dito
+  DEF_FORMAT, TIMEFMT --- dito
+  grid_selection, grid_lp, mgrid_lp, polar_grid_angle --- 'set grid'
+  tic_start, tic_direction, tic_text, rotate_tics, tic_hjust, ... 
+  tic_vjust, tic_mirror --- globals for tic callbacks
+  x_axis, y_axis, z_axis --- 'current' x, y and z axis index
+  X_AXIS, Y_AXIS, Z_AXIS --- quick-access macros axis_array[x_axis] etc.
+  AXIS_MAP, AXIS_MAPBACK --- user <-> term coord mapping
+  map_x, map_y --- their old names
+  AXIS_WRITEBACK()
+  AXIS_DO_LOG(), AXIS_UNDO_LOG() --- log() a value for an axis' logbas
+  AXIS_LOG_VALUE(), AXIS_DE_LOG_VALUE() --- same, but test if necessary
+  AXIS_INIT3D, AXIS_INIT2D --- prepare axis for use
+  ... and lots of others --- go read axis.h yourself :-)
+
+ 
+removed from command.c: 
+  c_dummy_var[][]
+now in command.c: 
+  replot_disabled, MAX_TOKENS 
+
+removed from contour.c:
+  num_approx_points
+  bspline_order
+now in contour.c:
+  contour_format
+  contour_kind
+  contour_levels_kind
+  contour_levels
+  contour_order
+  contour_pts
+  (dyn_)contour_levels_list
+
+removed from datafile.c:
+  df_timecol
+now in datafile.c:
+  missing_val
+  plotted_data_from_stdin
+  df_axis
+renamed: pipe_open -> df_pipe_open
+
+now in eval.c/h:
+  udft_entry
+  udvt_entry
+  argument
+  FUNC_PTR
+  ft_entry
+
+now in gadgets.c/h:
+  types position_type, position, text_label, arrow_def, linestyle_def
+  types en_key_horizontal_position, en_key_sample_positioning, key_type
+  type label_struct
+  EMPTY_LABELSTRUCT --- for initializing/unset/reset
+  key, key_user_pos, key_vpos, key_hpos, key_just, key_swidth
+  key_vert_factor, key_width_fix, key_reverse, key_title
+  default_keybox_lp, key_box  --- status variables of 'set key'
+  xleft, xright, ybot, ytop: the graph boundary
+  xsize, ysize, ysize, aspect_ratio ---  'set size'
+  xoffset, xoffset --- 'set offset'
+  lmargin, bmargin,rmargin,tmargin --- set dito
+  first_arrow
+  first_label
+  first_linestyle
+  title
+  timelabel, timelabel_rotate, timelabel_bottom --- 'set timedate'
+  polar, parametric
+  zero --- 'set zero'
+  draw_border, border_lp
+  clip_lines1, clip_lines2, clip_points
+  samples_1, samples_2, SAMPLES
+  ang2rad --- 'set angle'
+  data_style, func_style --- 'set style data/func'
+  suppressMove
+  draw_clip_line, clip_line, clip_point --- moved from util3d.h
+  clip_put_text, clip_put_text_just --- dito (used for 2D, too)
+  clip_move, clip_vector --- from graph3d.h (also 2D usage)
+
+now in time.c/gp_time.h:
+  ZERO_YEAR
+  JAN_FIRST_WDAY 
+  SEC_OFFS_SYS
+  YEAR_SEC
+  MON_SEC
+  WEEK_SEC
+  DAY_SEC
+
+removed from graph3d.c/h:
+  suppress_move
+  hidden_active
+  hidden_no_update
+  map3d_xy() --- moved to util3d
+  map3d_z(), dbl_raise() --- unused, anyway
+  draw_bottom_grid() --- renamed, now draw3d_graphbox()
+  setlinestyle()
+  map_x3d & friend macros
+  move_pos_x, move_pos_y
+  clip_move(), clip_vector()
+now in graph3d.c/h:
+  types t_contour_placement, gnuplot_contours, iso_curve, surface_points
+  xscale3d, yscale3d, zscale3d
+  draw_contour
+  label_contours
+  draw_surface
+  hidden3d
+  surface_rot_z
+  surface_rot_x
+  surface_scale
+  surface_zscale
+  ticslevel
+  ISOSAMPLES
+  iso_samples_1
+  iso_samples_2  
+  cntr3d_linespoints() --- new
+  cntr3d_dots()	--- new
+  setup_3d_box_corners --- new
+  find_maxl_cntr() --- static, moved from misc.c
+  find_maxl_keys3d() --- static, moved from misc.c
+  right_x, right_y, front_x, front_y --- static, new
+
+removed from graphics.c/h:
+  statics tic_start, tic_direction, tic_text, rotate_tics, ...
+  tic_hjust, tic_vjust, tic_mirror, ...
+  ticfmt, timelevel, ticstep --- now function-local
+  min_array, max_array, log_array, base_array, scale[] ...
+  log_base_array --- now in 'axis' structure.
+  x_axis, y_axis --- now in axis.c
+  mant_exp() --- now static in axis.c
+  time_tic_just(), timetic_format(), fixup_range() --- dito 
+  set_tic(), setup_tics(), gen_tics() --- dito
+  gprintf() --- now in axis.c (but may not stay there)
+  CheckLog()  --- renamed, now in axis.c
+  write_multiline() --- now in term.c
+  xleft, xright, xtop, xbot --- now in gadgets.c
+  dbl_raise() --- unused
+now in graphics.c/h:
+  type curve_points
+  loff, roff, toff, boff
+  bar_size
+  find_maxl_keys() --- static, moved from misc.c
+  default_font
+  
+removed from hidden3d.h:
+  type vertex --- now in util3d.h
+  
+now in internal.h:
+  undefined
+
+removed from misc.c/h:
+  static find_maxl_cntr(), find_maxl_keys3d() --- now in graph3d
+  static find_maxl_keys() --- now in graphics
+  cp_alloc(), cp_extend(), cp_free() --- now in plot2d
+  sp_alloc(), sp_extend(), sp_free() --- now in plot3d
+  gp_strcspn --- now in stdfn
+now in misc.c/h:
+  get_style() --- from set.c
+  lp_use_properties() --- from set.c
+  lp_parse --- from set.c
+
+now in parse.c/h:
+  c_dummy_var[]
+  set_dummy_var[]
+  is_jump()
+
+removed from plot.c/h:
+  PROGRAM --- now in show
+  PROMPT --- now in command
+  SAMPLES --- now in gadgets
+  ISO_SAMPLES
+  ZERO
+  TERM
+  TBOOLEAN 
+  DTRUE
+  DEG2RAD()
+  MIN_CRV_POINTS
+  MIN_SRF_POINTS
+  INT_STR_LEN()
+  PATH_CONCAT()
+  CONCAT
+  CONCAT3
+  MAX_LINE_LEN
+  MAX_TOKENS 
+  MAX_ID_LEN
+  MAX_AT_LEN
+  NO_CARET --- now in util.h
+  MAX_NUM_VAR
+  FIRST_AXES --- now in axis
+  FIRST_Z_AXIS etc. --- now in axis
+  GPHUGE --- now in syscfg
+  HUGE_VAL, VERYLARGE --- dito
+  coordval --- dito
+  GPMAX(), GPMIN(), inrange() --- now in stdfn
+  is_comment(), is_system() --- now in syscfg
+  is_jump() --- now in parse
+  ... lots of types --- now in gp_types.h, or gadgets.h
+  type termentry/TERMENTRY --- now in term_api.h
+  ... all declarations of variables from other sources --- now there
+
+removed from plot2d.c/h:
+  INIT_ARRAYS(), CHECK_REVERSE(), LOAD_RANGE() --- now in axis
+  STORE_WITH_LOG_AND_FIXUP_RANGE() --- dito
+  FIXUP_RANGE_FOR_LOG() --- dito
+  WRITEBACK(), SAVE_WRITEBACK() --- renamed, now in axis
+now in plot2d.c/h:
+  boxwidth
+  cp_alloc()
+  cp_extend()
+  cp_free()
+
+removed from plot3d.c/h:
+  INIT_ARRAYS(), CHECK_REVERSE(), LOAD_RANGE() --- now in axis
+  STORE_WITH_LOG_AND_FIXUP_RANGE() --- dito
+  FIXUP_RANGE_FOR_LOG() --- dito
+  WRITEBACK SAVE_WRITEBACK() --- renamed, now in axis 
+  (yes, these were duplicates in plot2d and plot3d...)
+now in plot3d.c/h:
+  mapping3d
+  dgrid3d_row_fineness
+  dgrid3d_col_fineness
+  dgrid3d_norm_value
+  dgrid3d
+  calculate_set_of_isolines() --- new, isolated from eval_plots()
+  sp_alloc(),  sp_extend(),  sp_free() --- from misc
+  sp_replace() --- new
+
+removed from save.c:
+  SAVE_NUM_OR_TIME() --- now in setshow.h
+
+removed from set.c/setshow.h:
+  GET_NUM_OR_TIME() --- now in axis
+  reset_command --- now in unset
+  get_writeback_min() and friends --- renamed, now in axis
+
+and many globals that are now structure elements in the axis_array[]:
+  autoscale_*		--> axis_array[].autoscale
+  *format		--> [].formatstring
+  format_is_numeric[*]  --> [].format_is_numeric
+  is_log_*		--> [].log
+  base_log_*		--> [].base
+  log_base_log_*	--> [].log_base
+  *label		--> [].label
+  *min			--> [].set_min
+  *max			--> [].set_max
+  min_array[]		--> [].min
+  max_array[]		--> [].max
+  writeback_min[]	--> [].writeback_min
+  writeback_max[]	--> [].writeback_max
+  *zeroaxis		--> [].zeroaxis
+  *tics			--> [].ticmode
+  rotate_*tics		--> [].tic_rotate
+  m*tics		--> [].minitics
+  m*tfreq		--> [].mtic_freq
+  *ticdef		--> [].ticdef
+  timefmt		--> [].timefmt    --- one per axis, now!
+  datatype[]		--> [].is_timedata
+
+all other globals from set.c went to graph2d if they were 2D-releated,
+graph3d if 3D, gadgets if used by both 2D and 3D.
+
+now in stdfn.c/h:
+  gp_strcspn()
+  INT_STR_LEN
+  PATH_CONCAT
+  inrange
+  GPMAX
+  GPMIN
+
+now in syscfg.h:
+  GPHUGE, GPFAR
+  coordval
+  MAX_NUM_VAR
+  RETSIGTYPE
+  type sortfunc
+  GP_INLINE
+  TRUE, FALSE, TBOOLEAN
+
+removed from tables.h:
+  set_encoding_tbl, set_encoding_id --- now in term_api.h
+  
+now in term.c/term_api.h:
+  *term, term_options
+  *outstr
+  multiplot
+  ignore_enhanced_text
+  encoding, encoding_names
+  set_encoding_tbl, set_encoding_id
+  write_multiline
+  types JUSTIFY, VERT_JUSTIFY, lp_style_type, TERMENTRY/termentry
+  
+in unset.c:
+  unset_mtics(), unset_tics(), unset_timedata() and others ---
+    replace lots of functions by one, taking an axis_index argument
+
+now in util.c:
+  graph_error() --- from graphics
+
+removed from util3d.c:
+  clip_point(), draw_clip_line(), clip_put_text(), ...
+  clip_put_text_just(), clip_line() --- caused problems with hidden3d
+now in util3d.c:
+  type vertex --- from hidden3d
+  FLAG_VERTEX_AS_UNDEFINED(), VERTEX_IS_UNDEFINED, V_EQUAL --- dito
+  TERMCOORD() --- dito
+  map3d_xyz 
+  map3d_xy --- from graph3d
+  draw3d_line() --- new
+  draw3d_line_unconditional() --- new
+  draw3d_point() --- new --- these replace the old, removed ones
+
+
+If you've read all through this, you're one determined person ---
+congratulations.
+
+Hans-Bernhard Broeker (broeker@physik.rwth-aachen.de)
+Even if all the snow were burnt, ashes would remain.
+
+---------------------------------------------------------------------------
+
+2001/07/24: I made a lot of changes in the expression parser /
+evaluator subsystem. The interface from the expression evaluator to
+the rest of gnuplot is now through only *one* header file, eval.h. The
+headers interpol.h, specfun.h and standard.h are now used only for
+communication to eval.c and its helpers. Other modules should #include
+only eval.h, or parse.h if they need to handle user input (parse.h
+includes eval.h).
+
+I've also renamed all those incomprehendible functions 'aterms()'
+through 'hterms()' in parser.c, according to the type of expression
+they actually parse. The expression type names follow those in the C
+standard grammar. In order of increasing operator precedence:
+
+express --> parse_expression
+xterms --> parse_conditional_expression
+aterms --> parse_logical_OR_expression
+bterms --> parse_logical_AND_expression
+cterms --> parse_inclusive_OR_expression  
+dterms --> parse_exclusive_OR_expression  
+eterms --> parse_AND_expression           
+fterms --> parse_equality_expression      
+gterms --> parse_relational_expression    
+hterms --> parse_additive_expression      
+iterms --> parse_multiplicative_expression
+unary --> parse_unary_expression
+factor --> parse_primary_expression
+
+Those are the functions that actually parse expressions of a given type
+based upon lexical symbols found in the input. A second set of functions
+represent the grammar states:
+
+xterm --> accept_logical_OR_expression
+aterm --> accept_logical_AND_expression
+bterm --> accept_inclusive_OR_expression  
+cterm --> accept_exclusive_OR_expression  
+dterm --> accept_AND_expression           
+eterm --> accept_equality_expression      
+fterm --> accept_relational_expression    
+gterm --> accept_additive_expression      
+hterm --> accept_multiplicative_expression
+
+
+
+*******************************************************************************
+*******************************************************************************
+
+
+TECHNICAL DETAILS FOR HOTKEYS/MOUSE COMMUNICATION
+=================================================
+
+The communication between a mouseable terminal and the main gnuplot core goes
+via structures defined in mousecmn.h. Further, the following terminal entries
+are used (see USE_MOUSE #defined code in .trm files):
+	void XX_set_ruler (int, int);
+	void XX_set_cursor (int, int, int);
+	void XX_put_tmptext (int, const char str[]);
+	void XX_set_clipboard (const char[]);
+
+On OS/2, the communication of these structures between the stand-alone
+terminals gnupmdrv.exe or gnuplot_x11.exe and the main gnuplot.exe executable
+is implemented by shared memory and an event semaphore.
+
+On Unix, a bidirectional pipe is implemented for the ipc (inter-process)
+communication between gnuplot_x11 and gnuplot. The readline interfaces were
+modified to listen to both stdin and the ipc file descriptor.  (Well, that's
+just the usual way). Note that if compiling with gnu readline, you must have a
+gnu readline version > 2.2 (3.0).  This will not be a major drawback, as 2.2 is
+out for years now and the current gnu readline version is 4.0.
+
+On VGAGL, the communication is done by...?
+
+On Windows, the windows terminal is a part of the gnuplot executable
+wgnuplot.exe. Thus it is possible to call the executing routine do_event(&ge);
+directly, without any communication at all.
+
+
+History of mouseable terminals:
+(*) March 1998: Implementation of mousing in OS/2 Presentation Manager terminal
+(Petr Mikulik). 
+(*) April 1999: Proper implementation of the gnupmdrv-gnuplot communication by
+shared memory and event semaphores (Franz Bakan, Petr Mikulik).
+(*) October 1999: Mouseable X11 terminal on Unix and OS/2 (Johannes Zellner,
+Petr Mikulik).
+
+The stand-alone terminals gnupmdrv.exe and gnuplot_x11(.exe) had full control
+over mousing over its displayed graph (all relevant gnuplot structures were
+passed into the terminal). 
+
+(*) January 2000: Mousing re-implemented by means of new terminal (.trm)
+entries, i.e. with a call-back of events passed from the stand-alone terminal
+to the main gnuplot (Pieter-Tjerk de Boer, Johannes Zellner, Petr Mikulik).
+
+(*) January 2000: Implemented mousing in vgagl terminal, the fast linux console
+terminal (Johannes Zellner).
+
+(*) February 2002: Implemented mousing in windows terminal (Petr Mikulik,
+Hans-Bernhard Broeker).
+
+
+*******************************************************************************
+*******************************************************************************
+
+
+TECHNICAL DETAILS FOR FAST MOUSE ROTATION OF 3D SURFACES
+========================================================
+
+For splots (3d) the data of all surfaces of the current graph are cached and
+can therefore be redrawn very quickly, without rereading and reparsing the
+input files. This enables smooth rotating and zooming of splots. Note that
+gnuplot frees the allocated data of the current graph when it starts to plot a
+new graph.
+
+
+*******************************************************************************
+*******************************************************************************
+
+
+TECHNICAL DETAILS ABOUT PM3D
+============================
+
+The pm3d splot mode for gray and colour maps and surface (and much later for
+much more: splots with color lines, plots with filled curves) has been
+implemented by Petr Mikulik in December 1998 and January 1999. It was released
+for public on 14. 3. 1999 as a patch for gnuplot 3.7. Below you can find the
+original notes about the implementation, slightly modified in February 2002.
+
+
+The pm3d algorithm: History and description
+-------------------------------------------
+
+The gnuplot pm3d splot mode is a successor to my pm3d algorithm coded
+previously in my Turbo Vision Pascal plotting program "pmgraf" for DOS (April
+1994) and the C++ command line "pm3d" program which is converting the input
+data into postscript maps (March 1995). Both programs are available on my
+homepage.
+
+The pm3d algorithm (in pmgraf, pm3d and now in gnuplot) draws a gray or colour
+map (or surface, in gnuplot only) of a 3D data, which are supposed to be a
+sequence of scans. Scan is the same what is called 'iso_curve' in gnuplot.
+
+For the given surface, the algorithm takes one scan after the other scan until
+the last but one. For a scan number K it looks at the subsequent scan K+1. For
+each (but the last one) point on scan K, it makes a quadrangle with 4 corners:
+two subsequent points at scan K and two points at scan K+1. (The quadrangle is
+a rectangle if the data are matrix-like.) The quadrangle is filled by the
+colour corresponding to the averaged Z coordinate of its 4 corners.
+
+Therefore it can plot matricial as well as non-rectangular non-gridded data
+without any preprocessing, and on single pass through the data. It does not
+require that the scans have the same number of points (see the details on
+flushing below or 'set pm3d flush').
+
+
+pm3d implementation in gnuplot
+------------------------------
+
+Below, you find the basic description of gnuplot implementation of pm3d, colour
+palette and filled colour polygons.
+
+The pm3d implementation in gnuplot is is based on the following terminal
+entries (see below for more details):
+	term->make_palette
+	term->previous_palette
+	term->set_color
+	term->filled_polygon
+
+The topmost implementation of colour filled areas in plot3d.c:
+
+(*) pm3d mode is set on if (pm3d.where[0]). Its setting, or using 'with ...
+palette', requests the palette of continuous (smooth) colours for the given
+terminal according to 'set palette' setup. The palette is created by a call to
+make_palette(). The routine make_palette() is coded in pm3d.c. It will be
+commented below.
+
+(*) pm3d plot for a given surface is called from graph3d.c, just before the
+stuff for hidden line removal, i.e. before plotting surfaces and contours. For
+each surface, it calls
+               pm3d_plot( this_plot, pm3d.where[i] );
+
+(*) The colour box showing the sequence of continuous colours is drawn in routine 
+draw_color_smooth_box(). Postscript output uses the box implementation directly
+in the postscript language, see below.
+
+(*) Routine term->previous_palette() is called after the plot. Currently, it is
+needed only for printing the string "grestore" into a postscript file. 
+
+
+----- Implementation of pm3d_plot( this_plot, at_which_z ) in pm3d.c -----
+
+(*) This plots the map (for at_which_z=PM3D_AT_BASE or PM3D_AT_TOP) or surface
+(for at_which_z=PM3D_AT_SURFACE) for the given surface (variable this_plot).
+
+(*) The implementation of the pm3d algorithm is schematically:
+
+for scan J=1 to scans-1 { /* for each scan in the surface */
+  for pt=1 to min( points(J), points(J+1) ) { /* go over min nb of points */
+    pt' = ...; pt'' = ... /* see below */
+    ptJa = point(J,pt')
+    ptJb = point(J,pt'+1)
+    ptJ+1a = point(J+1,pt'')
+    ptJ+1b = point(J+1,pt'')
+    averagedZ = ( z(ptJa) + z(ptJb) + z(ptJ+1a) + z(ptJ+1b) ) / 4
+    set_color( averagedZ normalized to [0;1] )
+    fill_polygon( 4 corners, 
+                  those 4 points transformed into coordinates of
+                  the map or surface on the terminal )
+    }
+  }
+
+If the two subsequent scans have the same number of points, then pt''=pt'=pt.
+Otherwise, pt''=pt'=pt if 'scans flushed begin', pt'=points(J)-pt and
+pt''=points(J+1)-pt if 'scans flushed end', and similarly for 'scans center'.
+And nothing is drawn if there is only one point in the scan.
+
+
+----- Implementation of make_palette() in pm3d.c -----
+
+(*) Look into color.h, structure t_sm_palette: declaration of smooth palette,
+i.e. palette for smooth colours. It documents how gray [0,1] is mapped into
+(R,G,B) = ([0,1], [0,1], [0,1]).
+
+(*) Ask for the number of colours that are (still) available on the current
+terminal:
+	i = term->make_palette(NULL);
+
+Postscript terminal returns 0 since it supports all RGB values (no limit on
+discrete number of colours). It has its own mapping: transformation of gray
+[0,1] is coded as postscript functions, and also in order to make the output
+size of the postscript file as small as possible, i.e. the same as the output
+from the pm3d program. Further, not 3 values of the RGB triplet but only 1 gray
+value is written into the postscript file. This is achieved by the analytical
+functions: pm3dGetColorValue() are coded as postscript functions, see post.trm:
+PostScriptColorFormulae[] used in PS_make_palette entry. PS->make_palette()
+looks itself into sm_palette and writes a header with the appropriate
+postscript codes for formulaR, formulaG, formulaB transformations. See also
+post.trm: PostScriptColorFormulae[] used in PS_make_palette. Return from
+make_palette().
+
+All other terminals have discrete number of colours. Currently an RGB palette
+is allocated for the number of available colours returned by make_palette(); if
+pm3d is used in gnuplot's multiplot mode, then the result would be incorrect if
+the previous palette is not reused or if the number of colours is not limited
+by 'set palette maxcolors'.
+
+Creating the RGB palette: make the array of (RGB) triplets according to items in 
+sm_palette (not for postscript) 
+	sm_palette.color = malloc( sm_palette.colors * sizeof(rgb_color) );
+
+And then
+for (i = 0; i < sm_palette.colors; i++) {
+  gray = (double)i / (sm_palette.colors - 1); /* rescale to [0;1] */
+  if (sm_palette.ColorMode == colorModeGRAY) /* gray scale only */
+     sm_palette.color[i].r = sm_palette.color[i].g = sm_palette.color[i].b
+     			   = gray;
+  else { /* i.e. sm_palette.ColorMode == colorModeRGB */
+    sm_palette.color[i].r = pm3dGetColorValue(sm_palette.formulaR, gray);
+    sm_palette.color[i].g = pm3dGetColorValue(sm_palette.formulaG, gray);
+    sm_palette.color[i].b = pm3dGetColorValue(sm_palette.formulaB, gray);
+    }
+  }
+
+Finally, tell the terminal to allocate the palette for the (RGB) triplets 
+(again, not for postscript)
+	term->make_palette(&sm_palette);
+
+
+----- Transformation of the z-coordinate to gray and RGB in pm3c.c -----
+
+How a colour is transformed from the gray?  AveragedZ is mapped into the 
+interval [min_z:max_z] which is transformed into [0:1], see routine
+	double z2gray ( double z ) 
+which rescales z into the interval [0,1]. This works fine also for the 
+logarithmic z axis. Later, this is used by
+	gray = z2gray ( avgZ );
+This value can be used directly as a gray for gray maps. For colour maps
+it further needs to transform 
+	gray -> (R,G,B): [0:1] -> ([0:1], [0:1], [0:1])
+thus some nice three functions have to be choosen --- see pm3d.c, function
+pm3dGetColorValue(), for the available mapping functions.
+
+Note that after the complete separation of the z and cb axes (cb-axis is the
+axis of colors) in February 2002, there is a new function z2cb(), and z2gray()
+was replaced by cb2gray().
+
+
+----- Implementation of pm3d terminal entries in *.trm -----
+
+In this section you will find a brief discussion on the following pm3d-related
+terminal entries:
+	term->make_palette
+	term->previous_palette
+	term->set_color
+	term->filled_polygon
+which are required to make pm3d to work. Files considered by these functions
+are color.h, color.c, plot.h, and all .trm which are pm3d-capable. If you are
+coding pm3d support for a new terminal, then you can have a look at the code
+in these files:
+	gif.trm (bitmap GIF terminal implementation),
+	post.trm (PostScript terminal implementation),
+	pm.trm + gclient.c (OS/2 PM terminal implementation),
+	x11.trm + gplt_x11.c (X11 terminal implementation).
+
+The pm3d-specific code is surrounded by #ifdef PM3D ... #endif, so it is
+possible to compile gnuplot with or without pm3d support just bey (un)defining
+the PM3D constant.
+
+In plot.h, the following new terminal entries are added into struct TERMENTRY:
+
+int (*make_palette) __PROTO((t_sm_palette *palette));
+    1. If palette==NULL, then return nice/suitable maximal number of colours
+    supported by this terminal. Returns 0 if it can make colours without
+    palette (like postscript).
+    2. If palette!=NULL, then allocate its own palette return value is
+    undefined.
+    3. Available: some negative values of max_colors for whatever it can be 
+    useful.
+
+    Some particular notes:
+    (*) Terminals with palette (GIF, PM): there are already some basic colours
+    allocated (see gnuplot command 'test'), thus an offset for the `part with
+    smooth colours' is needed. 
+    (*) GIF: can allocate up to 256 colours, i.e. discrete number of colours.  
+    (*) PM: discrete number of colours.  Passes the rgbTable through the pipe
+    into standalone gnupmdrv driver.  X11 should be implemented in the same
+    way.
+    (*) PostScript: continuous colours, as "setrgbcolor" PS command takes the
+    triplet of intervals [0,1].
+
+void (*previous_palette) __PROTO((void));	
+    Release the palette that the above routine allocated and get back the
+    palette that was active before. Some terminals, like displays, may draw
+    parts of the figure using their own palette. The terminals possessing only
+    one palette for the whole plot don't need this routine.
+
+    Actually, this routine is currently used only for postscript terminal,
+    where it writes "grestore" as make_palette() starts its postscript
+    definitions by "gsave"... that's because there are the analytical mapping
+    functions gray->RGB defined in the local header.
+
+void (*set_color) __PROTO((double gray));
+    The value of gray is [0;1]. The terminal uses its color palette or any
+    other way to transform in into true gray or to r,g,b. This terminal entry
+    remembers (or not) this colour so that it can reuse it for a subsequent
+    drawing (for each terminal separately).
+
+void (*filled_polygon) __PROTO((int points, gpiPoint *corners));
+    The declaration has been made the same as in GIF's gd.h. It fills the given
+    polygon according to color set by the previous call to set_color().
+
+
+*******************************************************************************
+*******************************************************************************
+
+TECHNICAL DETAILS ABOUT PLOT WITH IMAGE
+=======================================
+
+The plot_image() routine in graphics.c was added by Daniel Sebald on October
+30, 2003.  It is intended for plotting images if the terminal driver supports
+images, otherwise it reverts to pm3d color boxes if possible.  A large part of
+the routine checks that the visible points form a valid rectangular grid.
+Because the data is in the form of 2D/3D point structures, this must be done.
+(A future feature might be the ability to circumvent the large storage
+requirements of 2D/3D point structures and the need to check whether data
+forms a grid whenever the user supplies image data in a known matrix format.)
+
+If a grid aligned with the Cartesian axes is not given, plot_image() will
+revert to plotting each pixel as a color boxes using term->filled_polygon().
+This same fallback to individual polygons is used to render images on 
+terminals that have no term->image() entry point. This mode can also be
+forced by the keyword "failsafe":    ... with {rgb}image {failsafe}.
+
+Only details about the "tricky" algorithms are given here.
+
+There are eight valid ways that pixel grid information can be entered via the
+plot->points[] array.  These are based upon the scanning direction (i.e., along
+one of the dimensions) and the two directions (positive vs. negative) along
+the dimensions that the points are entered.
+
+Definitions:
+
+    K = input scan line length (i.e., number of samples along line)
+    L = input plane length (i.e., number of scan lines)
+  dim = dimension (0 means increments along x, 1 means increments along y)
+ dxg0 = delta x grid along the scan line (can be positive or negative)
+ dyg0 = delta y grid along the scan line (can be positive or negative)
+ dxg1 = delta x grid between scan lines (can be positive or negative)
+ dyg1 = delta y grid between scan lines (can be positive or negative)
+sgn() = sign of variable (- represented as 0, + represented as 1)
+  a^b = raise a to the power b
+    M = output row length (i.e., number of columns)
+    N = output column length (i.e., number of rows)
+
+The goal is to move the data from the plot->points[] array to the matrix pixel
+grid in the order (1,1), (1,2), (1,3), ..., (M,N-1), (M,N) forming the M x N
+matrix
+
+   (1,1)...(M,1)
+     .       .
+     .       .
+     .       .
+   (1,N)...(M,N)
+
+(Note that the terminal scale, positive or negative, has an influence on the
+orientation of pixels.  Ignore this temporarily for simplicity.  Formulas are
+augmented later to account for axes directions.)  The approach is to step
+through the plot points and copy each visible point to its appropriate spot in
+the image matrix array.  The routine that does this is fundamentally
+
+  for (i=0, j=line_length, i_image=i_start; i < plot->p_count; i++) {
+    image[i_image] = plot->points[i].CRD_COLOR;
+    i_image += i_delta_pixel;
+    j--;
+    if (j == 0) {
+      i_image += i_delta_line;
+      j = line_length;
+    }
+  }
+
+Thus the indexing parameters i_start, line_length, i_delta_pixel and
+i_delta_line must be determined.  line_length is solely dependent upon the
+dimension; K if dimension = 0 (i.e., increment along a row) and L if
+dimension = 1 (i.e., along column).  The other relationships can be determined
+by looking at the eight 4 x 2 illustrations which follow.  Assume points are
+entered 0, 1, 2, 3, 4, 5, 6, 7, then the various ways of entry are:
+
+  (1)       (2)       (3)       (4)       (5)       (6)       (7)       (8)
+
+3 2 1 0   7 6 5 4   0 1 2 3   4 5 6 7   6 4 2 0   7 5 3 1   0 2 4 6   1 3 5 7
+7 6 5 4   3 2 1 0   4 5 6 7   0 1 2 3   7 5 3 1   6 4 2 0   1 3 5 7   0 2 4 6
+
+The functions are:
+
+sgn(dyg1)---------|
+sgn(dxg1)------   |
+sgn(dyg0)--   |   |                        i_delta_pixel
+sgn(dxg0) |   |   |                              |
+      |   |   |   |          i_start        |    |    |   i_delta_line
+     --- --- --- --- | -------------------- | ------- | ---------------
+(1)   -   0   0   -  |    K - 1 =  K*1 - 1  |   -1    |   2*K =  K + K
+(2)   -   0   0   +  |  K*L - 1 =  K*L - 1  |   -1    |     0 =  K - K
+(3)   +   0   0   -  |      0   =  K*1 - K  |    1    |     0 = -K + K
+(4)   +   0   0   +  |  K*(L-1) =  K*L - K  |    1    |  -2*K = -K - K
+                     |                      |         |
+(5)   0   -   -   0  |  (L-1)*K =  K*L - K  |   -K    |      K*L + 1
+(6)   0   +   -   0  |  K*L - 1 =  K*L - 1  |   -K    |      K*L - 1
+(7)   0   -   +   0  |      0   =  K*1 - K  |    K    |     -K*L + 1
+(8)   0   +   +   0  |    K - 1 =  K*1 - 1  |    K    |     -K*L - 1
+
+
+
+There is a clear distinction between formulas based upon dimension.
+Summarizing,
+
+
+               dimension = 0 (x changing)
+-------------------------------------------------------
+line_length:                     K
+
+i_start:           L^(dyg1 > 0) * K - K^(dxg0 > 0)
+
+i_delta_pixel:             (-1)^(dxg0 < 0)
+
+i_delta_line:   K*[(-1)^(dxg0 > 0) + (-1)^(dyg1 > 0)]
+-------------------------------------------------------
+
+
+
+               dimension = 1 (y changing)
+-------------------------------------------------------
+line_length:                     L
+
+i_start:           L^(dxg1 < 0) * K - K^(dyg0 < 0)
+
+i_delta_pixel:             K*(-1)^(dxg1 < 0)
+
+i_delta_line:   K*L*(-1)^(dxg1 > 0) + (-1)^(dyg0 > 0)
+-------------------------------------------------------
+
+
+The above formulas are what appear preceding the for() loop in the actual code
+except for one detail, the terminal scale, i.e., direction for which the axes
+are increasing.  Simply note that if terminal scale is negative the orientation
+swaps along the related direction.  Thus augmenting the sign tests in the above
+equations will account for the terminal scale.  For example, let xsts and ysts
+be the sign of the x and y terminal scale, respectively.  Then the formula for
+i_start when x is changing (dimension 0) becomes:
+
+i_start:           L^(dyg1*ysts > 0) * K - K^(dxg0*xsts > 0)
+
+and so on.
+
+
+/***** NOTE:  Info between starred comments was original method and now a
+              simple, but less efficient, method of finding the corners by
+              conditional tests while rearranging the points is done.  So
+              the following is obsolete... but may come back to it at some
+              point.  But if this has been sitting around for quite a while
+              now, feel free to delete what is between the stars.
+
+There is also the matter of computing what points in the array of plot->point[]
+constitute pixels (1,1) and (N,M).  There are four grid corners determined on
+the first pass through the data.  However, what these map to also depend upon
+the three variables dim, d_x_g and d_y_g. Again, looking at the illustrations:
+
+      dim  sgn(d_x_g)  sgn(d_y_g) | pixel_1_1 | pixel_M_N
+      ---  ----------  ---------- | --------- | ---------
+(1)    0       -           -      |     1     |     2
+(2)    0       -           +      |     3     |     0
+(3)    0       +           -      |     0     |     3
+(4)    0       +           +      |     2     |     1
+(5)    1       -           -      |     2     |     1
+(6)    1       -           +      |     3     |     0
+(7)    1       +           -      |     0     |     3
+(8)    1       +           +      |     1     |     2
+
+
+These functions are implemented by table look up.  With
+
+    int pixel_1_1_logic[2][2][2] = {1, 3, 0, 2, 2, 3, 0, 1};
+    int pixel_M_N_logic[2][2][2] = {2, 0, 3, 1, 1, 0, 3, 2};
+
+The following yields the desired functions:
+
+pixel_1_1 =
+ grid_corner[ pixel_1_1_logic[dimension][delta_x_grid > 0][delta_y_grid > 0] ];
+pixel_M_N =
+ grid_corner[ pixel_M_N_logic[dimension][delta_x_grid > 0][delta_y_grid > 0] ];
+
+*****/
+
+
+TECHNICAL DETAILS ABOUT TERMINAL DRIVER FUNCTION image
+======================================================
+
+Support for images in the X11 driver was added by Daniel Sebald on February
+27, 2003.  The function
+
+  void (*image) __PROTO((unsigned M, unsigned N, coordval *image,
+                         gpiPoint *corner, int color_mode));
+
+is the terminal driver routine for displaying an image.  'M' is the number of
+rows, 'N' is the number of columns, 'image' is a pointer to image data stored
+with upper left pixel first and scanning horizontally from left to right,
+'corner' contains
+
+ corner[0].x  upper left pixel (1,1) location (extent) of image
+ corner[0].y
+ corner[1].x  lower right pixel (M,N) location (extent) of image
+ corner[1].y
+ corner[2].x  upper left corner of visible window
+ corner[2].y
+ corner[3].x  lower right corner of visible window
+ corner[3].y
+
+and 'color_mode' indicates if the image should use RGB triples or palette
+lookup.
+
+Image samples are a coordval which is a float.  Image data attempts to be
+consistent with the color schemes of Petr Mikulik's pm3d.  Therefore, the
+values in the image array are in the range [0.0,1.0] and the terminal driver
+routine can handle this data by mapping this range to a range appropriate for
+the output device.
+
+If `color_mode` is IC_RGB, the `image` array should be treated as triples of
+floats.  That is, rather than the length of the image array being M*N, as is
+the case when `color_mode` is IC_PALETTE, the length of the array is 3*M*N.
+Triples are of the form
+
+image[0] = red 1,1
+image[1] = green 1,1
+image[2] = blue 1,1
+image[3] = red 1,2
+image[4] = green 1,2
+image[5] = blue 1,2
+etc.
+
+When in IC_PALETTE mode, image data should be used as an index into the
+palette constructed by the make_palette() terminal routine.  That is, one
+should multiply the value by the palette size minus one, cast to an integer
+and range check (good practice) the index.
+
+The meaning of the corners is that the first two represent the outer extent of
+the pixels representing the image; not the centers of the pixels on the outer
+edge, but the outer edge of the pixels on the outer edge.  The next two corners
+represent the extent of the visual, or clipping region.  Thus, on the outer
+edge of the image may be pixels which are only fractionally displayed.
+
+
+TECHNICAL DETAILS ABOUT X11 IMAGE DRIVER
+========================================
+
+Support for images in the X11 driver was added by Daniel Sebald on February
+27, 2003.
+
+For X11, this image terminal function is X11_image().  Because of the large
+amount of data associated with an image, the routine avoids using floats and
+avoids using formatted I/O representation for numbers.  The "scanf" function
+is a very inefficient routine for large amounts of data.
+
+To avoid using floats, the maximum resolution of the color plane of the X11
+device is assumed to be 16 bits.  (Not an unreasonable assumption.)  The image
+data is converted to short by multiplying by the maximum palette value.  On
+the gplt_x11.c side of the pipe, these unsigned short values are shifted to
+the right to match the size of its palette.
+
+To avoid using formatted I/O.  A simple encoding scheme is used to eliminate
+all image data values having a value equivalent to a '\n' character or a '\0'
+character because the core gplt_x11.c routine interprets these characters in
+a special way.  The scheme is as follows: if the character '\n' or '\0' are
+found, they are replaced by a two byte representation (CODE_WORD,value+1).
+On the receiving side, if the CODE_WORD is found, the next byte after it minus
+one is the decoded character.  Naturally, the CODE_WORD itself must also be
+encoded so as to not lose those in the data stream.
+
+An additional step is to first translate the data before sending it over the
+pipe.  This is done by subtracting a constant.  The constant is added back
+in on the other side.  The reason for this is that image data often contains
+many 0 characters (e.g., upper 8 bits).  Thus the character '\0' is prevalent
+in image data, and without translation, the encoding scheme would result in
+noticable expansion of the data stream.  The encoding is meant to cut down the
+amount of data that is stored in the gplt_x11.c replot buffers.
+
+Because there may be an endianess problem if the gnuplot and gnuplot_x11
+programs were compiled under different compilers, Petr and Dan added an endian
+check command.  If this check finds it is necessary to swap bytes in encoded
+binary data coming across the pipe, then gnuplot_x11 will do so for those
+commands using encoded binary.  In most cases, these programs will have been
+compiled with the same compiler so byte swapping will not be done.  But it is
+there just in case.
+
+The X11 color bit packing is a bit tricky.  It attempts to be portable, but I'm
+sure there are peculiar hardware formats out there that will not work properly
+as it currently exists.  (Some additions and tweaking will probably be need,
+but without examples of every hardware configuration it is difficult to program
+for them.)  Basically, shifts and masking for packing the bits from the RGB
+data (16 bits per channel) are derived from the masks of the X11 display
+information.  Also, there is hardware option of byte order:  most significant
+byte first or least significant byte first.  The routine will swap bytes if
+necessary.  However, if the bytes need to be swapped and the RGB masks are all
+8 bits, then the swapping can be done inherently by appropriately altering the
+bit shifts.  For example, say the masks are R: 0xff0000, G: 0xff00, B: 0xff
+and bytes need to be swapped.  Rather than using these masks and swapping
+bytes, the masks could be changed to R: 0xff00, G: 0xff0000, B: 0xff000000.
+
+Comments:
+
+The method works rather well, short of a more direct method of storing image
+data in gplt_x11.c without having to pull the data out of the replot buffer for
+every refresh.  The new 2D binary data file entry (well documented in the
+gnuplot.doc file) in concert with the image routines was suppose to make Octave
+fast at drawing images.  However, Octave needs some reworking yet to make this
+happen seamlessly.  The problem is that Octave does not yet use binary data but
+instead uses ASCII data files to get information to Gnuplot.  I've attempted to
+write data to a file in binary format using Octave's fwrite() routine then use
+Octave's graw() routine.  This speeds things up somewhat, but I still think
+this interface can be improved at a later time.
+
+
+TECHNICAL DETAILS ABOUT POSTSCRIPT IMAGE DRIVER
+===============================================
+
+The PostScript image driver is rather straightforward.  Its main processing
+involves encoding the data in ASCII85 format.  No compression scheme is used
+currently.  Run length encoding hardly seems worth the effort because in most
+cases the amount of compression won't be too significant, I'm guessing.  For
+image data, other than the single bit variety such as a facsimile, other forms
+of compression are more efficient.
+
+
+COMMENTS ABOUT BINARY DATA FILE SYNTAX
+======================================
+
+A keyword for binary data indicates which way to scan within the file.  The
+Cartesian variables x, y, and z are analogous to the cylindrical variables
+t (theta), r, and z internally.  However, the common math convention for
+listing triples in these coordinate systems is (x,y,z) and (r,t,z).  It may
+be worth switching the role of theta and r inside the program.  (If done,
+change the `scan` note inside the `binary` documentation.)
+
+*******************************************************************************
+*******************************************************************************

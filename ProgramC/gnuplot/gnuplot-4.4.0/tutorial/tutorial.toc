@@ -1,0 +1,14 @@
+\contentsline {section}{\numberline {1}Introduction and History}{1}
+\contentsline {section}{\numberline {2}Using gnuplot for \LaTeX : a Tutorial}{1}
+\contentsline {paragraph}{Example 1:}{1}
+\contentsline {paragraph}{Example 2:}{2}
+\contentsline {paragraph}{Example 3:}{4}
+\contentsline {paragraph}{Example 4:}{4}
+\contentsline {paragraph}{Going further:}{5}
+\contentsline {paragraph}{Line and point types:}{6}
+\contentsline {subsection}{\numberline {2.1}Summary --- Use with \LaTeX }{6}
+\contentsline {section}{\numberline {3}Use with EEPIC}{8}
+\contentsline {section}{\numberline {4}For Former GnuT\kern -.1667em\lower .5ex\hbox {E}\kern -.125emX\spacefactor \@m \ Users}{8}
+\contentsline {section}{\numberline {5}What is new for T\kern -.1667em\lower .5ex\hbox {E}\kern -.125emX\spacefactor \@m {} and \LaTeX {} terminals in gnuplot 4.0}{8}
+\contentsline {section}{\numberline {6}Sample of epslatex terminal driver}{8}
+\contentsline {section}{\numberline {7}Contact for help}{9}

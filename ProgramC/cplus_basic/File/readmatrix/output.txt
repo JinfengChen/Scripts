@@ -1,0 +1,15 @@
+li	20	100
+li
+20
+100
+Read line from file:li	20	100
+ao	20	120
+ao
+20
+120
+Read line from file:ao	20	120
+liu	30	100
+liu
+30
+100
+Read line from file:liu	30	100

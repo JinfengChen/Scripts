@@ -1,0 +1,112 @@
+ $Id: README,v 1.5 1998/03/16 08:21:26 kanungo Exp kanungo $
+
+Package: UMDHMM version 1.02
+Author: Tapas Kanungo (kanungo@cfar.umd.edu)
+Organization: University of Maryland, Collge Park, MD
+Web: 	http://www.cfar.umd.edu/~kanungo
+Date:	19 February, 1998 
+
+Updated on 5 May, 1999: see CHANGES file.
+
+Updated on 6 May, 1999: see CHANGES file.
+
+This software contains code for understanding the basics
+of hidden Markov models (HMM). The notation used is
+very similar to that used by Rabiner and Juang in:
+
+- Rabiner, L. R. and B. H. Juang, "Fundamentals of Speech Recognition,"
+  Prentice Hall, 1993.
+- Rabiner, L. R., "A Tutorial on Hidden Markov Models and Selected 
+  Applications in Speech Recognition, Prov. of IEEE, vol. 77, no. 2, 
+  pp. 257-286, 1989.
+- Rabiner, L. R., and B. H. Juang, "An Introduction to Hidden Markov Models,"
+  IEEE ASSP Magazine, vol. 3, no. 1, pp. 4-16, Jan. 1986. 
+
+---------------------------------------------
+Installation:
+---------------------------------------------
+  --------------------
+  UNIX: Dec, Sun Solaris, Linux (redhat):
+  --------------------
+
+  Type "make all" at the unix prompt. It should
+  compile the package.
+
+  --------------------
+  Microsoft NT/95/98:
+  --------------------
+
+  1. Get the GNU package from:
+     ftp://go.cygnus.com/pub/sourceware.cygnus.com/cygwin/latest/full.exe
+    
+     This package includes gcc and various commands and 
+     shells (sh, bash, etc.) that make the PC have a unix
+     like environment.
+
+  2. Change to the UMDHMM directory and type "make all".
+  
+
+---------------------------------------------
+Executables:
+---------------------------------------------
+genseq: Generates a symbol sequence using the specified model
+
+testvit: Generates the most like state sequence for a given symbol sequence,
+	given the HMM, using Viterbi.
+
+esthmm: Estimates the HMM from a given symbol sequence using BaumWelch.
+
+testfor: Computes log Prob(observation|model) using the Forward algorithm.
+
+Note 1: The model test.hmm and sequence test.seq solve exercise 6.3 in 
+the book by Rabiner and Juang (page 341). Just execute the command:
+   prompt% testvit test.hmm test.seq
+and compare the output with the solution given in the book.
+
+---------------------------------------------
+HMM file format:
+---------------------------------------------
+M= <number of symbols>
+N= <number of states>
+A:
+a11 a12 ... a1N
+a21 a22 ... a2N
+ .   .   .   .
+ .   .   .   .
+ .   .   .   .
+aN1 aN2 ... aNN
+B:
+b11 b12 ... b1M
+b21 b22 ... b2M
+ .   .   .   .
+ .   .   .   .
+ .   .   .   .
+bN1 bN2 ... bNM
+pi:
+pi1 pi2 ... piN
+
+---------------------------------------------
+Sample HMM file:
+---------------------------------------------
+M= 2
+N= 3
+A:
+0.333 0.333 0.333
+0.333 0.333 0.333
+0.333 0.333 0.333
+B:
+0.5   0.5  
+0.75  0.25
+0.25  0.75
+pi:
+0.333 0.333 0.333
+---------------------------------------------
+Sequence file format:
+---------------------------------------------
+T=<seqence lenght>
+o1 o2 o3 . . . oT
+---------------------------------------------
+Sample sequence file:
+---------------------------------------------
+T= 10
+1 1 1 1 2 1 2 2 2 2

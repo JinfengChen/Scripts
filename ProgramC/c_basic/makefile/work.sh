@@ -1,0 +1,3 @@
+echo "make"
+make
+

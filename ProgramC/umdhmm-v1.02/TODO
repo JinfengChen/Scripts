@@ -1,0 +1,24 @@
+  $Id: TODO,v 1.4 1998/02/23 09:57:48 kanungo Exp kanungo $
+
+-- Documentation: Tutorial with theory, description of software, 
+   and applications.
+ +added some
+
+-- Estimation from multiple observation sequences of unequal length.
+
+-- Continuous density estimation.
+
+-- Allow the user to specify random number seed.
+ +done. -TK
+
+-- Write Usage() functions, read command line arguments using getopts()
+ +done. -TK
+
+-- Platforms: check it compiles on Solaris, sunos, HP, Linux, MSVC.
+ + checked on Dec Alpha, Linux, and Solaris. -TK
+ + tested on NT with Cygnus GNU package and gcc. -TK
+
+-- If someone can check that it compiles and works with gcc on PC/NT,
+   it will be great.
+ + tested on NT with Cygnus GNU package and gcc. -TK
+
